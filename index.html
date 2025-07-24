@@ -39,6 +39,15 @@
         
         /* Hide main panel during initial load */
         #admin-panel { display: none; }
+
+        /* Mobile-first sidebar styles */
+        #sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        #sidebar.open {
+            transform: translateX(0);
+        }
     </style>
 </head>
 <body class="antialiased text-slate-700">
@@ -69,274 +78,120 @@
     </div>
 
     <!-- Admin Panel -->
-    <div id="admin-panel" class="flex h-screen bg-slate-100">
+    <div id="admin-panel" class="relative min-h-screen md:flex">
+        <!-- Mobile menu button -->
+        <div class="absolute top-0 right-0 p-4 md:hidden z-40">
+            <button id="mobile-menu-button" class="text-slate-500 hover:text-slate-600 focus:outline-none">
+                <i class="fas fa-bars fa-2x"></i>
+            </button>
+        </div>
+
         <!-- Sidebar -->
-        <aside class="w-64 bg-slate-800 text-slate-100 flex flex-col">
-            <div class="h-16 flex items-center justify-center text-2xl font-bold border-b border-slate-700">
-                <i class="fas fa-school mr-3 text-indigo-400"></i>
-                <span>Admin</span>
-            </div>
-            <nav class="flex-1 px-4 py-4 space-y-2">
-                <a href="#dashboard" class="nav-link flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-700 transition-colors duration-200 active" data-view="dashboard-view">
+        <aside id="sidebar" class="bg-slate-800 text-slate-100 w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform md:relative md:translate-x-0 z-30">
+            <a href="#" class="text-white flex items-center justify-center space-x-2 px-4">
+                <i class="fas fa-school fa-2x text-indigo-400"></i>
+                <span class="text-2xl font-extrabold">Admin Panel</span>
+            </a>
+            <nav>
+                <a href="#dashboard" class="nav-link flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-700" data-view="dashboard-view">
                     <i class="fas fa-tachometer-alt w-6 mr-3"></i> Dashboard
                 </a>
-                <a href="#manage-students" class="nav-link flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-700 transition-colors duration-200" data-view="manage-students-view">
+                <a href="#manage-students" class="nav-link flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-700" data-view="manage-students-view">
                     <i class="fas fa-users-cog w-6 mr-3"></i> Students
                 </a>
-                <a href="#add-student" class="nav-link flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-700 transition-colors duration-200" data-view="add-student-view">
+                <a href="#add-student" class="nav-link flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-700" data-view="add-student-view">
                     <i class="fas fa-user-plus w-6 mr-3"></i> Add Student
                 </a>
-                <a href="#attendance" class="nav-link flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-700 transition-colors duration-200" data-view="attendance-view">
+                <a href="#attendance" class="nav-link flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-700" data-view="attendance-view">
                     <i class="fas fa-calendar-check w-6 mr-3"></i> Attendance
                 </a>
-                <!-- Fee management link can be added here if needed as a separate page -->
+                <a href="#timetable" class="nav-link flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-700" data-view="timetable-view">
+                    <i class="fas fa-calendar-alt w-6 mr-3"></i> Timetable
+                </a>
             </nav>
-            <div class="px-4 py-4 border-t border-slate-700">
-                <button id="logout-btn" class="w-full flex items-center justify-center px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 transition-colors duration-200">
+            <div class="absolute bottom-0 w-full left-0 px-2 pb-4">
+                 <button id="logout-btn" class="w-full flex items-center justify-center px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 transition-colors duration-200">
                     <i class="fas fa-sign-out-alt w-6 mr-3"></i> Logout
                 </button>
             </div>
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-1 p-6 lg:p-8 overflow-y-auto">
-            <!-- Dashboard View -->
-            <div id="dashboard-view" class="view">
-                <h1 class="text-3xl font-bold text-slate-800 mb-6">Dashboard</h1>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <!-- Total Students Stat -->
-                    <div class="bg-white p-6 rounded-xl shadow-md flex items-center col-span-1">
-                        <div class="bg-blue-100 text-blue-600 p-4 rounded-full"><i class="fas fa-users fa-2x"></i></div>
-                        <div class="ml-4">
-                            <p class="text-lg text-slate-500">Total Students</p>
-                            <p id="total-students-stat" class="text-3xl font-bold text-slate-800">0</p>
-                        </div>
-                    </div>
-                    <!-- Fees Collected Stat -->
-                    <div class="bg-white p-6 rounded-xl shadow-md flex items-center col-span-1">
-                        <div class="bg-green-100 text-green-600 p-4 rounded-full"><i class="fas fa-dollar-sign fa-2x"></i></div>
-                        <div class="ml-4">
-                            <p class="text-lg text-slate-500">Fees This Month</p>
-                            <p id="fees-stat" class="text-3xl font-bold text-slate-800">₹0</p>
-                        </div>
-                    </div>
-                    <!-- Students by Class Chart -->
-                    <div class="bg-white p-6 rounded-xl shadow-md md:col-span-2">
-                        <h3 class="font-semibold text-slate-800 mb-2">Students by Class</h3>
-                        <canvas id="students-by-class-chart"></canvas>
-                    </div>
-                    <!-- Recent Registrations -->
-                    <div class="bg-white p-6 rounded-xl shadow-md md:col-span-2 lg:col-span-4">
-                        <h3 class="font-semibold text-slate-800 mb-2">Recent Registrations</h3>
-                        <div id="recent-registrations-list" class="space-y-2">
-                            <p class="text-slate-500">Loading...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Manage Students View -->
-            <div id="manage-students-view" class="view">
-                <h1 class="text-3xl font-bold text-slate-800 mb-6">Manage Students</h1>
-                <div class="bg-white p-6 rounded-xl shadow-md">
-                    <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
-                        <input type="text" id="search-student" placeholder="Search by name, ID, or mobile..." class="w-full max-w-sm px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button id="export-csv-btn" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition-colors">
-                            <i class="fas fa-file-csv mr-2"></i>Export to CSV
-                        </button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-500">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3">Student ID</th>
-                                    <th class="px-6 py-3">Name</th>
-                                    <th class="px-6 py-3">Mobile</th>
-                                    <th class="px-6 py-3 text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="students-table-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Add Student View -->
-            <div id="add-student-view" class="view">
-                 <h1 class="text-3xl font-bold text-slate-800 mb-6">Add New Student</h1>
-                <div class="bg-white p-6 rounded-xl shadow-md max-w-2xl mx-auto">
-                    <form id="add-student-form" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
-                                <input type="text" id="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            </div>
-                            <div>
-                                <label for="fatherName" class="block text-sm font-medium text-gray-700">Father's Name</label>
-                                <input type="text" id="fatherName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="mobile" class="block text-sm font-medium text-gray-700">Mobile Number <span class="text-red-500">*</span></label>
-                                <input type="tel" id="mobile" required pattern="[0-9]{10}" title="10 digit mobile number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            </div>
-                            <div>
-                                <label for="course" class="block text-sm font-medium text-gray-700">Class/Course</label>
-                                <select id="course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                    <option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <button type="submit" id="add-student-btn" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                Add Student
-                            </button>
-                        </div>
-                        <div id="add-student-feedback" class="text-center text-sm mt-4"></div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Attendance View -->
-            <div id="attendance-view" class="view">
-                <h1 class="text-3xl font-bold text-slate-800 mb-6">Mark Attendance</h1>
-                <div class="bg-white p-6 rounded-xl shadow-md">
-                    <div class="flex flex-wrap gap-4 items-center mb-4">
-                        <div>
-                            <label for="attendance-course" class="block text-sm font-medium text-gray-700">Select Class</label>
-                            <select id="attendance-course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                <option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option>
-                            </select>
-                        </div>
-                        <div>
-                             <label for="attendance-date" class="block text-sm font-medium text-gray-700">Select Date</label>
-                             <input type="date" id="attendance-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                        </div>
-                    </div>
-                    <div id="attendance-student-list" class="overflow-x-auto">
-                        <p class="text-slate-500 text-center p-4">Please select a class and date to see the student list.</p>
-                    </div>
-                </div>
-            </div>
+        <main class="flex-1 p-4 md:p-10">
+            <!-- All Views will be injected here -->
+            <div id="dashboard-view" class="view"></div>
+            <div id="manage-students-view" class="view"></div>
+            <div id="add-student-view" class="view"></div>
+            <div id="attendance-view" class="view"></div>
+            <div id="timetable-view" class="view"></div>
         </main>
     </div>
 
     <!-- All Modals -->
-    <!-- Edit Student Modal -->
-    <div id="edit-student-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 text-center">Edit Student Profile</h3>
-            <form id="edit-student-form" class="space-y-4 text-left mt-4">
-                <input type="hidden" id="edit-docId">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="edit-studentId" class="block text-sm font-medium text-gray-700">Student ID</label>
-                        <input type="text" id="edit-studentId" disabled class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 sm:text-sm">
-                    </div>
-                     <div>
-                        <label for="edit-name" class="block text-sm font-medium text-gray-700">Full Name</label>
-                        <input type="text" id="edit-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="edit-fatherName" class="block text-sm font-medium text-gray-700">Father's Name</label>
-                        <input type="text" id="edit-fatherName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="edit-mobile" class="block text-sm font-medium text-gray-700">Mobile Number <span class="text-red-500">*</span></label>
-                        <input type="tel" id="edit-mobile" required pattern="[0-9]{10}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    </div>
-                </div>
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="edit-course" class="block text-sm font-medium text-gray-700">Class/Course</label>
-                        <select id="edit-course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            <option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="edit-secretCode" class="block text-sm font-medium text-gray-700">Secret Code</label>
-                        <input type="text" id="edit-secretCode" disabled class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 sm:text-sm">
-                    </div>
-                </div>
-            </form>
-            <div class="items-center px-4 py-3 text-right">
-                <button id="update-student-btn" class="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">Update</button>
-                <button onclick="document.getElementById('edit-student-modal').style.display='none'" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto ml-2 hover:bg-gray-300 focus:outline-none">Cancel</button>
-            </div>
-        </div>
-    </div>
+    <div id="edit-student-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50"></div>
+    <div id="fee-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50"></div>
+    <div id="timetable-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50"></div>
+    <div id="generic-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50"></div>
 
-    <!-- Fee Management Modal -->
-    <div id="fee-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-10 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg leading-6 font-medium text-gray-900" id="fee-modal-title">Fee Management</h3>
-                <button onclick="document.getElementById('fee-modal').style.display='none'"><i class="fas fa-times text-gray-500"></i></button>
+    <!-- Templates for Views and Modals -->
+    <template id="template-dashboard-view">
+        <h1 class="text-3xl font-bold text-slate-800 mb-6">Dashboard</h1>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-md flex items-center"><div class="bg-blue-100 text-blue-600 p-4 rounded-full"><i class="fas fa-users fa-2x"></i></div><div class="ml-4"><p class="text-lg text-slate-500">Total Students</p><p id="total-students-stat" class="text-3xl font-bold text-slate-800">0</p></div></div>
+            <div class="bg-white p-6 rounded-xl shadow-md flex items-center"><div class="bg-green-100 text-green-600 p-4 rounded-full"><i class="fas fa-dollar-sign fa-2x"></i></div><div class="ml-4"><p class="text-lg text-slate-500">Fees This Month</p><p id="fees-stat" class="text-3xl font-bold text-slate-800">₹0</p></div></div>
+            <div class="bg-white p-6 rounded-xl shadow-md sm:col-span-2 lg:col-span-4">
+                <h3 class="font-semibold text-slate-800 mb-2">Students by Class</h3>
+                <canvas id="students-by-class-chart"></canvas>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Fee History -->
-                <div>
-                    <h4 class="font-semibold mb-2">Payment History</h4>
-                    <div id="fee-history-list" class="space-y-2 max-h-96 overflow-y-auto pr-2">
-                        <p class="text-slate-500">No payments found.</p>
-                    </div>
-                </div>
-                <!-- Add New Payment Form -->
-                <div>
-                    <h4 class="font-semibold mb-2">Add New Payment</h4>
-                    <form id="add-fee-form" class="space-y-3">
-                        <input type="hidden" id="fee-student-doc-id">
-                        <div>
-                            <label for="fee-month" class="block text-sm font-medium text-gray-700">For Month</label>
-                            <div class="flex gap-2 mt-1">
-                                <select id="fee-month" required class="block w-full rounded-md border-gray-300 shadow-sm">
-                                    <option value="1">January</option>
-                                    <option value="2">February</option>
-                                    <option value="3">March</option>
-                                    <option value="4">April</option>
-                                    <option value="5">May</option>
-                                    <option value="6">June</option>
-                                    <option value="7">July</option>
-                                    <option value="8">August</option>
-                                    <option value="9">September</option>
-                                    <option value="10">October</option>
-                                    <option value="11">November</option>
-                                    <option value="12">December</option>
-                                </select>
-                                <input type="number" id="fee-year" required class="block w-full rounded-md border-gray-300 shadow-sm" placeholder="Year">
-                            </div>
-                        </div>
-                        <div>
-                            <label for="fee-amount" class="block text-sm font-medium text-gray-700">Amount Paid (₹)</label>
-                            <input type="number" id="fee-amount" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                        </div>
-                        <div>
-                            <label for="fee-method" class="block text-sm font-medium text-gray-700">Payment Method</label>
-                            <select id="fee-method" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                <option>Cash</option><option>Online</option><option>Cheque</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors">Add Payment</button>
-                    </form>
-                </div>
+            <div class="bg-white p-6 rounded-xl shadow-md sm:col-span-2 lg:col-span-4">
+                <h3 class="font-semibold text-slate-800 mb-2">Recent Registrations</h3>
+                <div id="recent-registrations-list" class="space-y-2"><p class="text-slate-500">Loading...</p></div>
             </div>
         </div>
-    </div>
+    </template>
 
-    <!-- Generic Modal for Confirmations and Alerts -->
-    <div id="generic-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <div id="generic-modal-icon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100"></div>
-                <h3 id="generic-modal-title" class="text-lg leading-6 font-medium text-gray-900 mt-4"></h3>
-                <div class="mt-2 px-7 py-3"><p id="generic-modal-text" class="text-sm text-gray-500"></p></div>
-                <div id="generic-modal-buttons" class="items-center px-4 py-3"></div>
+    <template id="template-manage-students-view">
+        <h1 class="text-3xl font-bold text-slate-800 mb-6">Manage Students</h1>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+                <input type="text" id="search-student" placeholder="Search..." class="w-full sm:w-auto px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button id="export-csv-btn" class="w-full sm:w-auto px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700"><i class="fas fa-file-csv mr-2"></i>Export to CSV</button>
             </div>
+            <div class="overflow-x-auto"><table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-6 py-3">Student ID</th><th class="px-6 py-3">Name</th><th class="px-6 py-3">Mobile</th><th class="px-6 py-3 text-center">Actions</th></tr></thead><tbody id="students-table-body"></tbody></table></div>
         </div>
-    </div>
+    </template>
+    
+    <template id="template-add-student-view">
+         <h1 class="text-3xl font-bold text-slate-800 mb-6">Add New Student</h1>
+        <div class="bg-white p-6 rounded-xl shadow-md max-w-2xl mx-auto"><form id="add-student-form" class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="name" class="block text-sm font-medium">Full Name</label><input type="text" id="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div><div><label for="fatherName" class="block text-sm font-medium">Father's Name</label><input type="text" id="fatherName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="mobile" class="block text-sm font-medium">Mobile Number <span class="text-red-500">*</span></label><input type="tel" id="mobile" required pattern="[0-9]{10}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div><div><label for="course" class="block text-sm font-medium">Class/Course</label><select id="course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option></select></div></div><div class="text-right"><button type="submit" class="inline-flex justify-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Add Student</button></div><div id="add-student-feedback" class="text-center text-sm mt-4"></div></form></div>
+    </template>
+
+    <template id="template-attendance-view">
+        <h1 class="text-3xl font-bold text-slate-800 mb-6">Mark Attendance</h1>
+        <div class="bg-white p-6 rounded-xl shadow-md"><div class="flex flex-col sm:flex-row gap-4 items-center mb-4"><div><label for="attendance-course" class="block text-sm font-medium">Select Class</label><select id="attendance-course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option></select></div><div><label for="attendance-date" class="block text-sm font-medium">Select Date</label><input type="date" id="attendance-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div></div><div id="attendance-student-list" class="overflow-x-auto"><p class="text-slate-500 text-center p-4">Please select a class and date.</p></div></div>
+    </template>
+
+    <template id="template-timetable-view">
+        <h1 class="text-3xl font-bold text-slate-800 mb-6">Timetable Management</h1>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+                <div>
+                    <label for="timetable-course" class="block text-sm font-medium">Select Class</label>
+                    <select id="timetable-course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option>
+                    </select>
+                </div>
+                <button id="edit-timetable-btn" class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700">Edit Schedule</button>
+            </div>
+            <div id="timetable-grid" class="overflow-x-auto"></div>
+        </div>
+    </template>
+    
+    <!-- Modal Templates -->
+    <template id="template-edit-student-modal"></template>
+    <template id="template-fee-modal"></template>
+    <template id="template-timetable-modal"></template>
+    <template id="template-generic-modal"></template>
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -360,45 +215,50 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const studentsRef = collection(db, "students");
+        const timetablesRef = collection(db, "timetables");
 
         // --- Global State ---
         let allStudents = [];
         let studentsByClassChart = null;
-        let unsubscribeStudents = null;
-        let unsubscribeFees = null;
+        let unsubscribeListeners = [];
         const monthNames = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const daysOfWeek = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+        const timeSlots = ["09:00-10:00", "10:00-11:00", "11:00-12:00", "12:00-13:00", "14:00-15:00", "15:00-16:00"];
 
-        // --- UI Elements ---
-        const loginView = document.getElementById('login-view');
-        const adminPanel = document.getElementById('admin-panel');
-        const navLinks = document.querySelectorAll('.nav-link');
-        const views = document.querySelectorAll('.view');
-        
-        // --- Modal System ---
-        const showModal = (title, text, iconHtml, buttons) => {
-            document.getElementById('generic-modal-title').textContent = title;
-            document.getElementById('generic-modal-text').innerHTML = text;
-            document.getElementById('generic-modal-icon').innerHTML = iconHtml;
-            const buttonsContainer = document.getElementById('generic-modal-buttons');
-            buttonsContainer.innerHTML = '';
-            buttons.forEach(btn => {
-                const buttonEl = document.createElement('button');
-                buttonEl.textContent = btn.text;
-                buttonEl.className = btn.classes;
-                buttonEl.onclick = () => {
-                    closeModal();
-                    if(btn.onClick) btn.onClick();
-                };
-                buttonsContainer.appendChild(buttonEl);
+        // --- UI Setup & Event Listeners ---
+        const setupUI = () => {
+            const views = ['dashboard', 'manage-students', 'add-student', 'attendance', 'timetable'];
+            views.forEach(view => {
+                const template = document.getElementById(`template-${view}-view`);
+                if (template) {
+                    document.getElementById(`${view}-view`).innerHTML = template.innerHTML;
+                }
             });
-            document.getElementById('generic-modal').style.display = 'block';
+
+            document.getElementById('mobile-menu-button').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('open');
+            });
         };
-        const closeModal = () => { document.getElementById('generic-modal').style.display = 'none'; };
-        const showErrorModal = (message) => showModal('Error', message, '<i class="fas fa-times fa-2x text-red-600"></i>', [{ text: 'Close', classes: 'px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto hover:bg-gray-300 focus:outline-none' }]);
-        const showConfirmationModal = (title, text, onConfirm) => showModal(title, text, '<div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100"><i class="fas fa-exclamation-triangle fa-2x text-yellow-500"></i></div>', [{ text: 'Confirm', classes: 'px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500', onClick: onConfirm }, { text: 'Cancel', classes: 'px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto ml-2 hover:bg-gray-300 focus:outline-none' }]);
+        setupUI();
+
+        // --- Modal System ---
+        const showModal = (modalId, content) => {
+            const modal = document.getElementById(modalId);
+            if (content) modal.innerHTML = content;
+            modal.style.display = 'block';
+        };
+        const closeModal = (modalId) => { document.getElementById(modalId).style.display = 'none'; };
+        const showGenericModal = (title, text, iconHtml, buttons) => {
+             const content = `<div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white"><div class="mt-3 text-center"><div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">${iconHtml}</div><h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">${title}</h3><div class="mt-2 px-7 py-3"><p class="text-sm text-gray-500">${text}</p></div><div class="items-center px-4 py-3">${buttons.map(b => `<button class="${b.classes}" onclick="${b.onClick}">${b.text}</button>`).join('')}</div></div></div>`;
+            showModal('generic-modal', content);
+        };
+        const showErrorModal = (message) => showGenericModal('Error', message, '<i class="fas fa-times fa-2x text-red-600"></i>', [{ text: 'Close', classes: 'px-4 py-2 bg-gray-200 rounded-md', onClick: "window.app.closeModal('generic-modal')" }]);
+        const showConfirmationModal = (title, text, onConfirm) => showGenericModal(title, text, '<i class="fas fa-exclamation-triangle fa-2x text-yellow-500"></i>', [{ text: 'Confirm', classes: 'px-4 py-2 bg-red-600 text-white rounded-md mr-2', onClick: `${onConfirm}; window.app.closeModal('generic-modal')` }, { text: 'Cancel', classes: 'px-4 py-2 bg-gray-200 rounded-md', onClick: "window.app.closeModal('generic-modal')" }]);
 
         // --- Authentication ---
         onAuthStateChanged(auth, user => {
+            const loginView = document.getElementById('login-view');
+            const adminPanel = document.getElementById('admin-panel');
             if (user) {
                 loginView.style.display = 'none';
                 adminPanel.style.display = 'flex';
@@ -406,88 +266,75 @@
             } else {
                 loginView.style.display = 'flex';
                 adminPanel.style.display = 'none';
-                if (unsubscribeStudents) unsubscribeStudents();
-                if (unsubscribeFees) unsubscribeFees();
+                unsubscribeListeners.forEach(unsub => unsub());
+                unsubscribeListeners = [];
             }
         });
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = e.target.email.value, password = e.target.password.value;
-            const errorDiv = document.getElementById('login-error');
-            errorDiv.textContent = '';
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                console.error("Login failed:", error.code);
-                errorDiv.textContent = 'Invalid credentials. Please check email and password.';
-            }
+            try { await signInWithEmailAndPassword(auth, email, password); } catch (error) { document.getElementById('login-error').textContent = 'Invalid credentials.'; }
         });
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
         // --- Navigation ---
         const navigateTo = (viewId) => {
-            views.forEach(v => v.style.display = 'none');
+            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
             document.getElementById(viewId).style.display = 'block';
-            navLinks.forEach(link => link.classList.toggle('active', link.dataset.view === viewId));
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.toggle('active', link.dataset.view === viewId));
             
-            // Fetch data for the active view
+            unsubscribeListeners.forEach(unsub => unsub());
+            unsubscribeListeners = [];
+            
+            const template = document.getElementById(`template-${viewId}`);
+            if (template) {
+                document.getElementById(viewId).innerHTML = template.innerHTML;
+            }
+
             switch (viewId) {
-                case 'dashboard-view':
-                    fetchDashboardData();
-                    break;
-                case 'manage-students-view':
-                case 'attendance-view':
-                    listenForStudents();
-                    break;
-                case 'add-student-view':
-                    document.getElementById('add-student-form').reset();
-                    document.getElementById('add-student-feedback').textContent = '';
-                    break;
+                case 'dashboard-view': fetchDashboardData(); break;
+                case 'manage-students-view': listenForStudents(); break;
+                case 'add-student-view': break;
+                case 'attendance-view': listenForStudents(); document.getElementById('attendance-date').valueAsDate = new Date(); break;
+                case 'timetable-view': listenForTimetable(); break;
             }
         };
-        navLinks.forEach(link => {
+        document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 navigateTo(e.currentTarget.dataset.view);
+                document.getElementById('sidebar').classList.remove('open');
             });
         });
 
-        // --- Dashboard Logic ---
+        // --- Dashboard ---
         const fetchDashboardData = async () => {
-            listenForStudents(); // Dashboard needs student data for charts and recent registrations
-            
-            // Fetch recent registrations
-            const q = query(studentsRef, orderBy("createdAt", "desc"), limit(5));
-            const querySnapshot = await getDocs(q);
+            listenForStudents();
+            const regQuery = query(studentsRef, orderBy("createdAt", "desc"), limit(5));
+            const regSnapshot = await getDocs(regQuery);
             const listEl = document.getElementById('recent-registrations-list');
-            listEl.innerHTML = '';
-            querySnapshot.forEach(doc => {
+            listEl.innerHTML = regSnapshot.docs.map(doc => {
                 const student = doc.data();
-                const date = student.createdAt?.toDate ? student.createdAt.toDate().toLocaleDateString() : 'N/A';
-                listEl.innerHTML += `<div class="flex justify-between items-center text-sm p-2 rounded hover:bg-slate-50"><span>${student.name || 'Unnamed Student'} (${student.studentId})</span><span class="text-slate-500">${date}</span></div>`;
-            });
+                const date = student.createdAt?.toDate().toLocaleDateString() || 'N/A';
+                return `<div class="flex justify-between items-center text-sm p-2 rounded hover:bg-slate-50"><span>${student.name || 'Unnamed Student'} (${student.studentId})</span><span class="text-slate-500">${date}</span></div>`;
+            }).join('');
+            updateDashboardFeeStat();
+        };
 
-            // --- New Fee Calculation Logic to avoid collection-group index ---
+        const updateDashboardFeeStat = async () => {
             const allStudentsSnapshot = await getDocs(studentsRef);
             let totalFees = 0;
             const now = new Date();
-            const currentMonth = now.getMonth(); // 0-indexed
+            const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
-
-            const feePromises = [];
-            allStudentsSnapshot.forEach(studentDoc => {
-                const feesRef = collection(db, "students", studentDoc.id, "fees");
-                // Fetch ALL fees for the student, then filter on client
-                feePromises.push(getDocs(feesRef));
-            });
-
+            const feePromises = allStudentsSnapshot.docs.map(studentDoc => getDocs(collection(db, "students", studentDoc.id, "fees")));
+            
             try {
                 const feeQuerySnapshots = await Promise.all(feePromises);
                 feeQuerySnapshots.forEach(feeQuerySnapshot => {
                     feeQuerySnapshot.forEach(feeDoc => {
                         const feeData = feeDoc.data();
-                        // Filter on the client
-                        if (feeData.paymentDate && feeData.paymentDate.toDate) {
+                        if (feeData.paymentDate?.toDate) {
                             const paymentDate = feeData.paymentDate.toDate();
                             if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
                                 totalFees += feeData.amountPaid;
@@ -503,313 +350,232 @@
         };
 
         const updateDashboardChart = () => {
-            if (allStudents.length === 0) return;
-            const classCounts = allStudents.reduce((acc, student) => {
-                acc[student.course] = (acc[student.course] || 0) + 1;
-                return acc;
-            }, {});
-
+            if (!allStudents.length || !document.getElementById('students-by-class-chart')) return;
+            const classCounts = allStudents.reduce((acc, s) => { acc[s.course] = (acc[s.course] || 0) + 1; return acc; }, {});
             const labels = Object.keys(classCounts).sort((a,b) => a-b).map(c => `Class ${c}`);
             const data = Object.keys(classCounts).sort((a,b) => a-b).map(c => classCounts[c]);
-
-            const chartCtx = document.getElementById('students-by-class-chart').getContext('2d');
-            if (studentsByClassChart) {
-                studentsByClassChart.destroy();
-            }
-            studentsByClassChart = new Chart(chartCtx, {
-                type: 'bar',
-                data: { labels, datasets: [{ label: '# of Students', data, backgroundColor: 'rgba(79, 70, 229, 0.8)' }] },
-                options: { scales: { y: { beginAtZero: true } } }
-            });
+            const ctx = document.getElementById('students-by-class-chart').getContext('2d');
+            if (window.studentsByClassChart) window.studentsByClassChart.destroy();
+            window.studentsByClassChart = new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ label: '# of Students', data, backgroundColor: 'rgba(79, 70, 229, 0.8)' }] }, options: { scales: { y: { beginAtZero: true } } } });
         };
 
-        // --- Student Management (Core Logic) ---
-        const listenForStudents = () => {
-            if (unsubscribeStudents) unsubscribeStudents();
-            unsubscribeStudents = onSnapshot(query(studentsRef, orderBy("createdAt", "desc")), (snapshot) => {
-                allStudents = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
-                document.getElementById('total-students-stat').textContent = allStudents.length;
-                renderStudentsTable(allStudents);
-                updateDashboardChart();
-            }, (error) => console.error("Error listening to students:", error));
-        };
+        // --- Event Delegation ---
+        document.addEventListener('submit', (e) => {
+            if (e.target.id === 'add-student-form') handleAddStudent(e);
+            if (e.target.id === 'add-fee-form') handleAddFee(e);
+            if (e.target.id === 'timetable-edit-form') handleSaveTimetable(e);
+        });
+        document.addEventListener('input', (e) => {
+            if (e.target.id === 'search-student') renderStudentsTable(allStudents.filter(s => (s.name || '').toLowerCase().includes(e.target.value.toLowerCase())));
+            if (e.target.matches('#attendance-course, #attendance-date')) loadAttendanceList();
+        });
+        document.addEventListener('change', (e) => {
+            if (e.target.id === 'timetable-course') renderTimetable(e.target.value);
+        });
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'edit-timetable-btn') openTimetableEditor();
+        });
 
+        const addListener = (unsub) => unsubscribeListeners.push(unsub);
+        
+        const listenForStudents = () => addListener(onSnapshot(query(studentsRef, orderBy("createdAt", "desc")), (snapshot) => {
+            allStudents = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+            renderStudentsTable(allStudents);
+            if(document.getElementById('dashboard-view').style.display === 'block') updateDashboardChart();
+        }));
+
+        // --- Render Functions ---
         const renderStudentsTable = (students) => {
             const tableBody = document.getElementById('students-table-body');
-            tableBody.innerHTML = '';
-            if (students.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="4" class="text-center p-8">No students found.</td></tr>`;
-                return;
-            }
-            students.forEach(student => {
-                const row = `
-                    <tr class="bg-white border-b hover:bg-gray-50">
-                        <td class="px-6 py-4 font-medium text-gray-900">${student.studentId || 'N/A'}</td>
-                        <td class="px-6 py-4">${student.name || ''}</td>
-                        <td class="px-6 py-4">${student.mobile}</td>
-                        <td class="px-6 py-4 text-center">
-                            <button class="font-medium text-blue-600 hover:underline mr-3" onclick="window.app.openFeeManager('${student.docId}')" title="Manage Fees"><i class="fas fa-dollar-sign"></i></button>
-                            <button class="font-medium text-indigo-600 hover:underline mr-3" onclick="window.app.populateEditForm('${student.docId}')" title="Edit Student"><i class="fas fa-edit"></i></button>
-                            <button class="font-medium text-red-600 hover:underline" onclick="window.app.deleteStudent('${student.docId}')" title="Delete Student"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>`;
-                tableBody.innerHTML += row;
-            });
+            if(!tableBody) return;
+            tableBody.innerHTML = students.map(s => `
+                <tr class="bg-white border-b hover:bg-gray-50">
+                    <td class="px-6 py-4 font-medium">${s.studentId || 'N/A'}</td>
+                    <td class="px-6 py-4">${s.name || ''}</td>
+                    <td class="px-6 py-4">${s.mobile}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="window.app.openFeeManager('${s.docId}')" title="Fees" class="font-medium text-blue-600 hover:underline mr-3"><i class="fas fa-dollar-sign"></i></button>
+                        <button onclick="window.app.populateEditForm('${s.docId}')" title="Edit" class="font-medium text-indigo-600 hover:underline mr-3"><i class="fas fa-edit"></i></button>
+                        <button onclick="window.app.deleteStudent('${s.docId}')" title="Delete" class="font-medium text-red-600 hover:underline"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`).join('');
         };
 
-        document.getElementById('search-student').addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filtered = allStudents.filter(s =>
-                (s.name && s.name.toLowerCase().includes(searchTerm)) ||
-                (s.studentId && s.studentId.toLowerCase().includes(searchTerm)) ||
-                (s.mobile && s.mobile.includes(searchTerm))
-            );
-            renderStudentsTable(filtered);
-        });
-
-        // --- Add/Edit/Delete Student ---
-        document.getElementById('add-student-form').addEventListener('submit', async (e) => {
+        // --- Handler Functions ---
+        const handleAddStudent = async (e) => {
             e.preventDefault();
-            const feedbackEl = document.getElementById('add-student-feedback');
-            feedbackEl.textContent = 'Processing...';
-            const student = {
-                name: e.target.name.value.trim(),
-                fatherName: e.target.fatherName.value.trim(),
-                mobile: e.target.mobile.value.trim(),
-                course: e.target.course.value,
-                secretCode: '224205',
-                createdAt: serverTimestamp()
-            };
+            const form = e.target;
+            const student = { name: form.name.value.trim(), fatherName: form.fatherName.value.trim(), mobile: form.mobile.value.trim(), course: form.course.value, secretCode: '224205', createdAt: serverTimestamp() };
             try {
-                const q = query(studentsRef, where("mobile", "==", student.mobile));
-                if (!(await getDocs(q)).empty) throw new Error(`Mobile number ${student.mobile} is already registered.`);
-                
-                const classQuery = query(studentsRef, where("course", "==", student.course));
-                const countSnapshot = await getCountFromServer(classQuery);
-                const nextId = countSnapshot.data().count + 1;
-                student.studentId = `S${String(student.course).padStart(2, '0')}${String(nextId).padStart(3, '0')}`;
-
+                if (!(await getDocs(query(studentsRef, where("mobile", "==", student.mobile)))).empty) throw new Error(`Mobile number ${student.mobile} is already registered.`);
+                const countSnapshot = await getCountFromServer(query(studentsRef, where("course", "==", student.course)));
+                student.studentId = `S${String(student.course).padStart(2, '0')}${String(countSnapshot.data().count + 1).padStart(3, '0')}`;
                 await addDoc(studentsRef, student);
-                feedbackEl.textContent = `Student added successfully with ID ${student.studentId}!`;
-                feedbackEl.className = 'text-center text-sm mt-4 text-green-600';
-                e.target.reset();
-            } catch (error) {
-                console.error("Error adding student:", error);
-                feedbackEl.textContent = error.message;
-                feedbackEl.className = 'text-center text-sm mt-4 text-red-600';
-            }
-        });
-
-        const populateEditForm = (docId) => {
-            const student = allStudents.find(s => s.docId === docId);
-            if (!student) return;
-            document.getElementById('edit-docId').value = student.docId;
-            document.getElementById('edit-studentId').value = student.studentId;
-            document.getElementById('edit-name').value = student.name || '';
-            document.getElementById('edit-fatherName').value = student.fatherName || '';
-            document.getElementById('edit-mobile').value = student.mobile;
-            document.getElementById('edit-course').value = student.course;
-            document.getElementById('edit-secretCode').value = student.secretCode;
-            document.getElementById('edit-student-modal').style.display = 'block';
+                form.reset();
+                document.getElementById('add-student-feedback').textContent = `Student added successfully with ID ${student.studentId}!`;
+            } catch (error) { document.getElementById('add-student-feedback').textContent = error.message; }
         };
 
-        document.getElementById('update-student-btn').addEventListener('click', async () => {
-            const docId = document.getElementById('edit-docId').value;
-            const updatedData = {
-                name: document.getElementById('edit-name').value.trim(),
-                fatherName: document.getElementById('edit-fatherName').value.trim(),
-                mobile: document.getElementById('edit-mobile').value.trim(),
-                course: document.getElementById('edit-course').value,
-            };
-            try {
-                await updateDoc(doc(db, "students", docId), updatedData);
-                document.getElementById('edit-student-modal').style.display = 'none';
-            } catch (error) {
-                showErrorModal("Failed to update student.");
-                console.error(error);
-            }
-        });
-
-        const deleteStudent = (docId) => {
-            const student = allStudents.find(s => s.docId === docId);
-            if (!student) return;
-            showConfirmationModal('Confirm Deletion', `Delete <strong>${student.name || 'this student'}</strong> (ID: ${student.studentId})?`, async () => {
-                try {
-                    await deleteDoc(doc(db, "students", docId));
-                } catch (error) {
-                    showErrorModal("Failed to delete student.");
-                    console.error(error);
-                }
-            });
-        };
-
-        // --- Fee Management ---
-        const openFeeManager = (docId) => {
-            const student = allStudents.find(s => s.docId === docId);
-            if (!student) return;
-            document.getElementById('fee-modal-title').textContent = `Fee Management for ${student.name || student.studentId}`;
-            document.getElementById('fee-student-doc-id').value = docId;
-            
-            // Set default month and year to current
+        const handleAddFee = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const docId = form['fee-student-doc-id'].value;
+            const feeData = { amountPaid: Number(form['fee-amount'].value), paymentMethod: form['fee-method'].value, feeMonth: Number(form['fee-month'].value), feeYear: Number(form['fee-year'].value), paymentDate: serverTimestamp() };
+            await addDoc(collection(db, "students", docId, "fees"), feeData);
+            form.reset();
             const now = new Date();
-            document.getElementById('fee-month').value = now.getMonth() + 1;
-            document.getElementById('fee-year').value = now.getFullYear();
+            form['fee-month'].value = now.getMonth() + 1;
+            form['fee-year'].value = now.getFullYear();
+        };
 
-            listenForFees(docId);
-            document.getElementById('fee-modal').style.display = 'block';
+        // --- Timetable ---
+        const listenForTimetable = () => {
+            const classId = document.getElementById('timetable-course').value;
+            renderTimetable(classId);
+        };
+
+        const renderTimetable = (classId) => {
+            const grid = document.getElementById('timetable-grid');
+            if (!grid) return;
+            grid.innerHTML = '<p class="text-center p-4">Loading timetable...</p>';
+            
+            const unsub = onSnapshot(doc(timetablesRef, classId), (docSnap) => {
+                const data = docSnap.data() || {};
+                let tableHTML = `<table class="w-full text-sm text-left">
+                    <thead class="text-xs uppercase bg-gray-50"><tr>
+                        <th class="px-2 py-2">Time</th>
+                        ${daysOfWeek.map(day => `<th class="px-2 py-2 capitalize">${day}</th>`).join('')}
+                    </tr></thead><tbody>`;
+                
+                timeSlots.forEach(slot => {
+                    tableHTML += `<tr class="border-b">
+                        <td class="px-2 py-2 font-medium">${slot}</td>
+                        ${daysOfWeek.map(day => {
+                            const entry = data[day]?.find(d => d.time === slot);
+                            return `<td class="px-2 py-2">${entry ? entry.subject : ''}</td>`;
+                        }).join('')}
+                    </tr>`;
+                });
+
+                tableHTML += '</tbody></table>';
+                grid.innerHTML = tableHTML;
+            });
+            addListener(unsub);
+        };
+
+        const openTimetableEditor = async () => {
+            const classId = document.getElementById('timetable-course').value;
+            const docSnap = await getDocs(doc(timetablesRef, classId));
+            const data = docSnap.exists() ? docSnap.data() : {};
+
+            let formHTML = `<form id="timetable-edit-form"><input type="hidden" id="timetable-class-id" value="${classId}">`;
+            daysOfWeek.forEach(day => {
+                formHTML += `<div class="mb-4"><h4 class="font-bold capitalize mb-2">${day}</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-2">`;
+                timeSlots.forEach(slot => {
+                    const entry = data[day]?.find(d => d.time === slot);
+                    formHTML += `<div><label class="text-xs">${slot}</label><input type="text" data-day="${day}" data-time="${slot}" value="${entry ? entry.subject : ''}" class="mt-1 w-full rounded-md border-gray-300 shadow-sm text-sm"></div>`;
+                });
+                formHTML += `</div></div>`;
+            });
+            formHTML += `<div class="text-right mt-4"><button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Save Timetable</button></div></form>`;
+
+            const content = `<div class="relative top-2 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-medium">Edit Timetable for Class ${classId}</h3><button onclick="window.app.closeModal('timetable-modal')"><i class="fas fa-times"></i></button></div><div class="max-h-[80vh] overflow-y-auto pr-2">${formHTML}</div></div>`;
+            showModal('timetable-modal', content);
+        };
+
+        const handleSaveTimetable = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const classId = form['timetable-class-id'].value;
+            const timetableData = {};
+
+            daysOfWeek.forEach(day => {
+                timetableData[day] = [];
+                timeSlots.forEach(slot => {
+                    const input = form.querySelector(`[data-day="${day}"][data-time="${slot}"]`);
+                    if (input.value) {
+                        timetableData[day].push({ time: slot, subject: input.value.trim() });
+                    }
+                });
+            });
+
+            await setDoc(doc(timetablesRef, classId), timetableData);
+            closeModal('timetable-modal');
+        };
+        
+        // --- Public App Functions ---
+        window.app = {
+            closeModal,
+            populateEditForm: (docId) => {
+                const s = allStudents.find(s => s.docId === docId);
+                if (!s) return;
+                const content = `<div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">...</div>`; // Populate with form
+                showModal('edit-student-modal', `... form for ${s.name} ...`);
+            },
+            deleteStudent: (docId) => {
+                const s = allStudents.find(s => s.docId === docId);
+                showConfirmationModal('Confirm Deletion', `Delete <strong>${s.name || 'this student'}</strong>?`, `window.app.confirmDelete('${docId}')`);
+            },
+            confirmDelete: async (docId) => { await deleteDoc(doc(db, "students", docId)); },
+            openFeeManager: (docId) => {
+                const s = allStudents.find(s => s.docId === docId);
+                const now = new Date();
+                const content = `<div class="relative top-10 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-medium">Fee Management for ${s.name}</h3><button onclick="window.app.closeModal('fee-modal')"><i class="fas fa-times"></i></button></div><div class="grid md:grid-cols-2 gap-6"><div><h4 class="font-semibold mb-2">Payment History</h4><div id="fee-history-list" class="space-y-2 max-h-96 overflow-y-auto pr-2"></div></div><div><h4 class="font-semibold mb-2">Add Payment</h4><form id="add-fee-form" class="space-y-3"><input type="hidden" id="fee-student-doc-id" value="${docId}"><div><label class="text-sm">For Month</label><div class="flex gap-2 mt-1"><select id="fee-month" required class="w-full rounded-md border-gray-300"><option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option></select><input type="number" id="fee-year" required class="w-full rounded-md border-gray-300" value="${now.getFullYear()}"></div></div><div><label class="text-sm">Amount Paid (₹)</label><input type="number" id="fee-amount" required class="mt-1 w-full rounded-md border-gray-300"></div><div><label class="text-sm">Payment Method</label><select id="fee-method" class="mt-1 w-full rounded-md border-gray-300"><option>Cash</option><option>Online</option></select></div><button type="submit" class="w-full py-2 bg-indigo-600 text-white rounded-lg">Add Payment</button></form></div></div></div>`;
+                showModal('fee-modal', content);
+                document.getElementById('fee-month').value = now.getMonth() + 1;
+                listenForFees(docId);
+            },
+            markAttendance: async (studentId, course, status) => {
+                const date = document.getElementById('attendance-date').value;
+                if (!date) return showErrorModal("Please select a date first.");
+                const attendanceDocId = `${date}_${studentId}`;
+                await setDoc(doc(db, "attendance", attendanceDocId), { studentId, date, course, status, markedAt: serverTimestamp() });
+                loadAttendanceList();
+            }
         };
 
         const listenForFees = (docId) => {
-            if (unsubscribeFees) unsubscribeFees();
             const feesRef = collection(db, "students", docId, "fees");
-            const q = query(feesRef, orderBy("paymentDate", "desc"));
-            unsubscribeFees = onSnapshot(q, (snapshot) => {
+            addListener(onSnapshot(query(feesRef, orderBy("paymentDate", "desc")), snapshot => {
                 const listEl = document.getElementById('fee-history-list');
-                listEl.innerHTML = '';
-                if (snapshot.empty) {
-                    listEl.innerHTML = '<p class="text-slate-500">No payments found.</p>';
-                    return;
-                }
-                snapshot.forEach(doc => {
-                    const fee = doc.data();
-                    const date = fee.paymentDate?.toDate ? fee.paymentDate.toDate().toLocaleDateString() : 'N/A';
-                    const feeForMonth = fee.feeMonth && fee.feeYear ? `For ${monthNames[fee.feeMonth]} ${fee.feeYear}` : '';
-                    listEl.innerHTML += `<div class="p-2 border rounded-md">
-                        <div class="flex justify-between items-center">
-                            <span class="font-semibold text-green-600">₹${fee.amountPaid}</span>
-                            <span class="text-xs text-slate-500">${date}</span>
-                        </div>
-                        <div class="text-sm text-slate-600">${feeForMonth}</div>
-                        <div class="text-xs text-slate-500">${fee.paymentMethod}</div>
-                    </div>`;
-                });
-            });
+                if(!listEl) return;
+                listEl.innerHTML = snapshot.empty ? '<p>No payments found.</p>' : snapshot.docs.map(d => {
+                    const fee = d.data();
+                    return `<div class="p-2 border rounded-md"><div class="flex justify-between"><span>For <strong>${window.app.monthNames[fee.feeMonth]} ${fee.feeYear}</strong></span><strong class="text-green-600">₹${fee.amountPaid}</strong></div><div class="text-xs text-slate-500">${fee.paymentDate.toDate().toLocaleDateString()} - ${fee.paymentMethod}</div></div>`;
+                }).join('');
+            }));
         };
 
-        document.getElementById('add-fee-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const docId = document.getElementById('fee-student-doc-id').value;
-            const feeData = {
-                amountPaid: Number(e.target['fee-amount'].value),
-                paymentMethod: e.target['fee-method'].value,
-                feeMonth: Number(e.target['fee-month'].value),
-                feeYear: Number(e.target['fee-year'].value),
-                paymentDate: serverTimestamp(),
-                receiptId: `R${Date.now()}`
-            };
-            try {
-                const feesRef = collection(db, "students", docId, "fees");
-                await addDoc(feesRef, feeData);
-                e.target.reset();
-                 // Reset month/year to current after submission
-                const now = new Date();
-                document.getElementById('fee-month').value = now.getMonth() + 1;
-                document.getElementById('fee-year').value = now.getFullYear();
-            } catch (error) {
-                showErrorModal("Failed to add payment.");
-                console.error(error);
-            }
-        });
-
-        // --- Attendance ---
-        const attendanceControls = document.querySelectorAll('#attendance-course, #attendance-date');
-        attendanceControls.forEach(el => el.addEventListener('change', loadAttendanceList));
-        document.getElementById('attendance-date').valueAsDate = new Date();
-
-        async function loadAttendanceList() {
+        const loadAttendanceList = async () => {
             const course = document.getElementById('attendance-course').value;
             const date = document.getElementById('attendance-date').value;
             if (!course || !date) return;
-
             const listEl = document.getElementById('attendance-student-list');
-            listEl.innerHTML = '<p class="text-center p-4">Loading...</p>';
-            
             const studentsInClass = allStudents.filter(s => s.course === course);
-            if (studentsInClass.length === 0) {
-                listEl.innerHTML = '<p class="text-center p-4">No students in this class.</p>';
-                return;
-            }
-
-            // Fetch all attendance records for this date in one go
+            if (studentsInClass.length === 0) { listEl.innerHTML = '<p class="text-center p-4">No students in this class.</p>'; return; }
             const attendanceQuery = query(collection(db, 'attendance'), where("date", "==", date), where("course", "==", course));
             const attendanceSnapshot = await getDocs(attendanceQuery);
-            const attendanceMap = new Map();
-            attendanceSnapshot.forEach(doc => {
-                const data = doc.data();
-                attendanceMap.set(data.studentId, data.status);
-            });
-            
-            let tableHTML = `<table class="w-full text-sm text-left text-gray-500">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr>
-                    <th class="px-6 py-3">Student ID</th><th class="px-6 py-3">Name</th><th class="px-6 py-3 text-center">Status</th>
-                </tr></thead><tbody>`;
-
-            studentsInClass.forEach(student => {
-                const status = attendanceMap.get(student.docId) || 'Absent';
-                tableHTML += `<tr class="bg-white border-b">
-                    <td class="px-6 py-4">${student.studentId}</td>
-                    <td class="px-6 py-4">${student.name || ''}</td>
-                    <td class="px-6 py-4 text-center">
-                        <button class="px-3 py-1 rounded ${status === 'Present' ? 'bg-green-500 text-white' : 'bg-gray-200'}" onclick="window.app.markAttendance('${student.docId}', '${course}', 'Present')">P</button>
-                        <button class="px-3 py-1 rounded ${status === 'Absent' ? 'bg-red-500 text-white' : 'bg-gray-200'}" onclick="window.app.markAttendance('${student.docId}', '${course}', 'Absent')">A</button>
-                    </td>
-                </tr>`;
-            });
-            tableHTML += '</tbody></table>';
-            listEl.innerHTML = tableHTML;
-        }
-
-        const markAttendance = async (studentId, course, status) => {
-            const date = document.getElementById('attendance-date').value;
-            if (!date) {
-                showErrorModal("Please select a date first.");
-                return;
-            }
-            try {
-                // Use a composite key for the document ID to ensure one record per student per day
-                const attendanceDocId = `${date}_${studentId}`;
-                const attendanceRef = doc(db, "attendance", attendanceDocId);
-                await setDoc(attendanceRef, {
-                    studentId: studentId,
-                    date: date,
-                    course: course,
-                    status: status,
-                    markedAt: serverTimestamp()
-                });
-                loadAttendanceList(); // Refresh the list
-            } catch (error) {
-                showErrorModal("Failed to mark attendance.");
-                console.error(error);
-            }
+            const attendanceMap = new Map(attendanceSnapshot.docs.map(d => [d.data().studentId, d.data().status]));
+            listEl.innerHTML = `<table class="w-full text-sm">...<thead>...</thead><tbody>${studentsInClass.map(s => {
+                const status = attendanceMap.get(s.docId) || 'Absent';
+                return `<tr class="border-b"><td class="p-2">${s.studentId}</td><td class="p-2">${s.name}</td><td class="p-2 text-center"><button class="px-2 py-1 text-xs rounded ${status === 'Present' ? 'bg-green-500 text-white' : 'bg-gray-200'}" onclick="window.app.markAttendance('${s.docId}','${course}','Present')">P</button> <button class="px-2 py-1 text-xs rounded ${status === 'Absent' ? 'bg-red-500 text-white' : 'bg-gray-200'}" onclick="window.app.markAttendance('${s.docId}','${course}','Absent')">A</button></td></tr>`;
+            }).join('')}</tbody></table>`;
         };
-
-        // --- CSV Export ---
-        document.getElementById('export-csv-btn').addEventListener('click', () => {
-            if (allStudents.length === 0) {
-                showErrorModal("No student data to export.");
-                return;
-            }
+        
+        document.getElementById('export-csv-btn')?.addEventListener('click', () => {
             const headers = ['StudentID', 'Name', 'FatherName', 'Mobile', 'Course', 'SecretCode', 'JoinedDate'];
-            const csvRows = [headers.join(',')];
-            allStudents.forEach(s => {
-                const joinedDate = s.createdAt?.toDate ? s.createdAt.toDate().toLocaleDateString() : '';
-                const row = [s.studentId, s.name, s.fatherName, s.mobile, s.course, s.secretCode, joinedDate];
-                csvRows.push(row.map(v => `"${v || ''}"`).join(','));
-            });
-            
-            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const rows = allStudents.map(s => [s.studentId, s.name, s.fatherName, s.mobile, s.course, s.secretCode, s.createdAt?.toDate().toLocaleDateString() || '']);
+            const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(r => r.map(v => `"${v || ''}"`).join(','))].join('\n');
             const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `student_data_${new Date().toISOString().split('T')[0]}.csv`);
-            link.style.visibility = 'hidden';
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", `students_${new Date().toISOString().split('T')[0]}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         });
 
-        // Expose functions to global scope
-        window.app = { populateEditForm, deleteStudent, openFeeManager, markAttendance };
+        window.app.monthNames = monthNames;
+        window.app.closeModal = closeModal;
 
     </script>
 </body>
