@@ -261,7 +261,6 @@
             unsubscribeListeners.forEach(unsub => unsub());
             unsubscribeListeners = [];
             
-            // Re-initialize the view from template to ensure event listeners are fresh
             const template = document.getElementById(`template-${viewId}`);
             if (template) {
                 document.getElementById(viewId).innerHTML = template.innerHTML;
@@ -332,11 +331,12 @@
         };
 
         const updateDashboardChart = () => {
-            if (!allStudents.length || !document.getElementById('students-by-class-chart')) return;
+            const chartCanvas = document.getElementById('students-by-class-chart');
+            if (!allStudents.length || !chartCanvas) return; // FIX: Guard clause
             const classCounts = allStudents.reduce((acc, s) => { acc[s.course] = (acc[s.course] || 0) + 1; return acc; }, {});
             const labels = Object.keys(classCounts).sort((a,b) => a-b).map(c => `Class ${c}`);
             const data = Object.keys(classCounts).sort((a,b) => a-b).map(c => classCounts[c]);
-            const ctx = document.getElementById('students-by-class-chart').getContext('2d');
+            const ctx = chartCanvas.getContext('2d');
             if (window.studentsByClassChart) window.studentsByClassChart.destroy();
             window.studentsByClassChart = new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ label: '# of Students', data, backgroundColor: 'rgba(79, 70, 229, 0.8)' }] }, options: { scales: { y: { beginAtZero: true } } } });
         };
@@ -345,6 +345,7 @@
         document.addEventListener('submit', (e) => {
             if (e.target.id === 'add-student-form') handleAddStudent(e);
             if (e.target.id === 'add-fee-form') handleAddFee(e);
+            if (e.target.id === 'edit-student-form') handleUpdateStudent(e); // FIX: Added handler
         });
         document.addEventListener('input', (e) => {
             if (e.target.id === 'search-student') renderStudentsTable(allStudents.filter(s => (s.name || '').toLowerCase().includes(e.target.value.toLowerCase())));
@@ -402,6 +403,25 @@
             form['fee-month'].value = now.getMonth() + 1;
             form['fee-year'].value = now.getFullYear();
         };
+
+        const handleUpdateStudent = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const docId = form['edit-docId'].value;
+            const updatedData = {
+                name: form['edit-name'].value.trim(),
+                fatherName: form['edit-fatherName'].value.trim(),
+                mobile: form['edit-mobile'].value.trim(),
+                course: form['edit-course'].value,
+            };
+            try {
+                await updateDoc(doc(db, "students", docId), updatedData);
+                closeModal('edit-student-modal');
+            } catch (error) {
+                showErrorModal("Failed to update student.");
+                console.error(error);
+            }
+        };
         
         // --- Public App Functions ---
         window.app = {
@@ -409,8 +429,40 @@
             populateEditForm: (docId) => {
                 const s = allStudents.find(s => s.docId === docId);
                 if (!s) return;
-                const content = `<div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">...</div>`; // Populate with form
-                showModal('edit-student-modal', `... form for ${s.name} ...`);
+                const content = `
+                <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 text-center">Edit Student Profile</h3>
+                    <form id="edit-student-form" class="space-y-4 text-left mt-4">
+                        <input type="hidden" id="edit-docId" value="${s.docId}">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label for="edit-studentId" class="block text-sm font-medium">Student ID</label><input type="text" id="edit-studentId" value="${s.studentId || ''}" disabled class="mt-1 block w-full rounded-md bg-gray-100 border-gray-300 shadow-sm"></div>
+                            <div><label for="edit-name" class="block text-sm font-medium">Full Name</label><input type="text" id="edit-name" value="${s.name || ''}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label for="edit-fatherName" class="block text-sm font-medium">Father's Name</label><input type="text" id="edit-fatherName" value="${s.fatherName || ''}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                            <div><label for="edit-mobile" class="block text-sm font-medium">Mobile Number <span class="text-red-500">*</span></label><input type="tel" id="edit-mobile" value="${s.mobile || ''}" required pattern="[0-9]{10}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label for="edit-course" class="block text-sm font-medium">Class/Course</label>
+                                <select id="edit-course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                    <option value="6" ${s.course == '6' ? 'selected' : ''}>6th</option>
+                                    <option value="7" ${s.course == '7' ? 'selected' : ''}>7th</option>
+                                    <option value="8" ${s.course == '8' ? 'selected' : ''}>8th</option>
+                                    <option value="9" ${s.course == '9' ? 'selected' : ''}>9th</option>
+                                    <option value="10" ${s.course == '10' ? 'selected' : ''}>10th</option>
+                                    <option value="11" ${s.course == '11' ? 'selected' : ''}>11th</option>
+                                    <option value="12" ${s.course == '12' ? 'selected' : ''}>12th</option>
+                                </select>
+                            </div>
+                            <div><label for="edit-secretCode" class="block text-sm font-medium">Secret Code</label><input type="text" id="edit-secretCode" value="${s.secretCode || ''}" disabled class="mt-1 block w-full rounded-md bg-gray-100 border-gray-300 shadow-sm"></div>
+                        </div>
+                        <div class="items-center px-4 py-3 text-right">
+                            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Update</button>
+                            <button type="button" onclick="window.app.closeModal('edit-student-modal')" class="px-4 py-2 bg-gray-200 rounded-md ml-2 hover:bg-gray-300">Cancel</button>
+                        </div>
+                    </form>
+                </div>`;
+                showModal('edit-student-modal', content);
             },
             deleteStudent: (docId) => {
                 const s = allStudents.find(s => s.docId === docId);
