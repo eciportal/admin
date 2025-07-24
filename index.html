@@ -88,10 +88,15 @@
 
         <!-- Sidebar -->
         <aside id="sidebar" class="bg-slate-800 text-slate-100 w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform md:relative md:translate-x-0 z-30">
-            <a href="#" class="text-white flex items-center justify-center space-x-2 px-4">
-                <i class="fas fa-school fa-2x text-indigo-400"></i>
-                <span class="text-2xl font-extrabold">Admin Panel</span>
-            </a>
+            <div class="flex items-center justify-between px-4">
+                <a href="#" class="text-white flex items-center space-x-2">
+                    <i class="fas fa-school fa-2x text-indigo-400"></i>
+                    <span class="text-2xl font-extrabold">Admin Panel</span>
+                </a>
+                <button id="close-sidebar-button" class="md:hidden text-slate-400 hover:text-white">
+                    <i class="fas fa-times fa-2x"></i>
+                </button>
+            </div>
             <nav>
                 <a href="#dashboard" class="nav-link flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-700" data-view="dashboard-view">
                     <i class="fas fa-tachometer-alt w-6 mr-3"></i> Dashboard
@@ -211,7 +216,10 @@
             });
 
             document.getElementById('mobile-menu-button').addEventListener('click', () => {
-                document.getElementById('sidebar').classList.toggle('open');
+                document.getElementById('sidebar').classList.add('open');
+            });
+            document.getElementById('close-sidebar-button').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.remove('open');
             });
         };
         setupUI();
@@ -357,7 +365,10 @@
         const listenForStudents = () => addListener(onSnapshot(query(studentsRef, orderBy("createdAt", "desc")), (snapshot) => {
             allStudents = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
             renderStudentsTable(allStudents);
-            if(document.getElementById('dashboard-view').style.display === 'block') updateDashboardChart();
+            if(document.getElementById('dashboard-view').style.display === 'block') {
+                document.getElementById('total-students-stat').textContent = allStudents.length;
+                updateDashboardChart();
+            }
         }));
 
         // --- Render Functions ---
