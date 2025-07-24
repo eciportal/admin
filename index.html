@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coaching Institute Admin Panel</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for Dashboard Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Custom styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        
+        /* View switching animation */
+        .view { display: none; animation: fadeIn 0.5s; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Active navigation link style */
+        .nav-link.active { background-color: #4f46e5; color: white; }
+        
+        /* Hide main panel during initial load */
+        #admin-panel { display: none; }
+    </style>
+</head>
+<body class="antialiased text-slate-700">
+
+    <!-- Login View -->
+    <div id="login-view" class="flex items-center justify-center min-h-screen bg-slate-200">
+        <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
+            <div class="text-center">
+                <i class="fas fa-user-shield fa-3x text-indigo-600"></i>
+                <h2 class="mt-4 text-3xl font-bold text-gray-900">Admin Login</h2>
+                <p class="mt-2 text-sm text-gray-600">Please sign in to access the dashboard.</p>
+            </div>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="email" class="text-sm font-medium text-gray-700">Email address</label>
+                    <input id="email" name="email" type="email" autocomplete="email" required value="admin@example.com" class="w-full px-4 py-2 mt-2 text-base text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label for="password" class="text-sm font-medium text-gray-700">Password</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required value="password123" class="w-full px-4 py-2 mt-2 text-base text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    Sign in
+                </button>
+            </form>
+            <div id="login-error" class="text-center text-sm text-red-600"></div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="flex h-screen bg-slate-100">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-800 text-slate-100 flex flex-col">
+            <div class="h-16 flex items-center justify-center text-2xl font-bold border-b border-slate-700">
+                <i class="fas fa-school mr-3 text-indigo-400"></i>
+                <span>Admin</span>
+            </div>
+            <nav class="flex-1 px-4 py-4 space-y-2">
+                <a href="#dashboard" class="nav-link flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-700 transition-colors duration-200 active" data-view="dashboard-view">
+                    <i class="fas fa-tachometer-alt w-6 mr-3"></i> Dashboard
+                </a>
+                <a href="#manage-students" class="nav-link flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-700 transition-colors duration-200" data-view="manage-students-view">
+                    <i class="fas fa-users-cog w-6 mr-3"></i> Students
+                </a>
+                <a href="#add-student" class="nav-link flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-700 transition-colors duration-200" data-view="add-student-view">
+                    <i class="fas fa-user-plus w-6 mr-3"></i> Add Student
+                </a>
+                <a href="#attendance" class="nav-link flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-700 transition-colors duration-200" data-view="attendance-view">
+                    <i class="fas fa-calendar-check w-6 mr-3"></i> Attendance
+                </a>
+                <!-- Fee management link can be added here if needed as a separate page -->
+            </nav>
+            <div class="px-4 py-4 border-t border-slate-700">
+                <button id="logout-btn" class="w-full flex items-center justify-center px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 transition-colors duration-200">
+                    <i class="fas fa-sign-out-alt w-6 mr-3"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 lg:p-8 overflow-y-auto">
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view">
+                <h1 class="text-3xl font-bold text-slate-800 mb-6">Dashboard</h1>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Total Students Stat -->
+                    <div class="bg-white p-6 rounded-xl shadow-md flex items-center col-span-1">
+                        <div class="bg-blue-100 text-blue-600 p-4 rounded-full"><i class="fas fa-users fa-2x"></i></div>
+                        <div class="ml-4">
+                            <p class="text-lg text-slate-500">Total Students</p>
+                            <p id="total-students-stat" class="text-3xl font-bold text-slate-800">0</p>
+                        </div>
+                    </div>
+                    <!-- Fees Collected Stat -->
+                    <div class="bg-white p-6 rounded-xl shadow-md flex items-center col-span-1">
+                        <div class="bg-green-100 text-green-600 p-4 rounded-full"><i class="fas fa-dollar-sign fa-2x"></i></div>
+                        <div class="ml-4">
+                            <p class="text-lg text-slate-500">Fees This Month</p>
+                            <p id="fees-stat" class="text-3xl font-bold text-slate-800">₹0</p>
+                        </div>
+                    </div>
+                    <!-- Students by Class Chart -->
+                    <div class="bg-white p-6 rounded-xl shadow-md md:col-span-2">
+                        <h3 class="font-semibold text-slate-800 mb-2">Students by Class</h3>
+                        <canvas id="students-by-class-chart"></canvas>
+                    </div>
+                    <!-- Recent Registrations -->
+                    <div class="bg-white p-6 rounded-xl shadow-md md:col-span-2 lg:col-span-4">
+                        <h3 class="font-semibold text-slate-800 mb-2">Recent Registrations</h3>
+                        <div id="recent-registrations-list" class="space-y-2">
+                            <p class="text-slate-500">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manage Students View -->
+            <div id="manage-students-view" class="view">
+                <h1 class="text-3xl font-bold text-slate-800 mb-6">Manage Students</h1>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
+                        <input type="text" id="search-student" placeholder="Search by name, ID, or mobile..." class="w-full max-w-sm px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button id="export-csv-btn" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition-colors">
+                            <i class="fas fa-file-csv mr-2"></i>Export to CSV
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3">Student ID</th>
+                                    <th class="px-6 py-3">Name</th>
+                                    <th class="px-6 py-3">Mobile</th>
+                                    <th class="px-6 py-3 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add Student View -->
+            <div id="add-student-view" class="view">
+                 <h1 class="text-3xl font-bold text-slate-800 mb-6">Add New Student</h1>
+                <div class="bg-white p-6 rounded-xl shadow-md max-w-2xl mx-auto">
+                    <form id="add-student-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                                <input type="text" id="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="fatherName" class="block text-sm font-medium text-gray-700">Father's Name</label>
+                                <input type="text" id="fatherName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="mobile" class="block text-sm font-medium text-gray-700">Mobile Number <span class="text-red-500">*</span></label>
+                                <input type="tel" id="mobile" required pattern="[0-9]{10}" title="10 digit mobile number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="course" class="block text-sm font-medium text-gray-700">Class/Course</label>
+                                <select id="course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                    <option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <button type="submit" id="add-student-btn" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Add Student
+                            </button>
+                        </div>
+                        <div id="add-student-feedback" class="text-center text-sm mt-4"></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Attendance View -->
+            <div id="attendance-view" class="view">
+                <h1 class="text-3xl font-bold text-slate-800 mb-6">Mark Attendance</h1>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div class="flex flex-wrap gap-4 items-center mb-4">
+                        <div>
+                            <label for="attendance-course" class="block text-sm font-medium text-gray-700">Select Class</label>
+                            <select id="attendance-course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option>
+                            </select>
+                        </div>
+                        <div>
+                             <label for="attendance-date" class="block text-sm font-medium text-gray-700">Select Date</label>
+                             <input type="date" id="attendance-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+                    <div id="attendance-student-list" class="overflow-x-auto">
+                        <p class="text-slate-500 text-center p-4">Please select a class and date to see the student list.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- All Modals -->
+    <!-- Edit Student Modal -->
+    <div id="edit-student-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 text-center">Edit Student Profile</h3>
+            <form id="edit-student-form" class="space-y-4 text-left mt-4">
+                <input type="hidden" id="edit-docId">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit-studentId" class="block text-sm font-medium text-gray-700">Student ID</label>
+                        <input type="text" id="edit-studentId" disabled class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 sm:text-sm">
+                    </div>
+                     <div>
+                        <label for="edit-name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                        <input type="text" id="edit-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit-fatherName" class="block text-sm font-medium text-gray-700">Father's Name</label>
+                        <input type="text" id="edit-fatherName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="edit-mobile" class="block text-sm font-medium text-gray-700">Mobile Number <span class="text-red-500">*</span></label>
+                        <input type="tel" id="edit-mobile" required pattern="[0-9]{10}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                </div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit-course" class="block text-sm font-medium text-gray-700">Class/Course</label>
+                        <select id="edit-course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="edit-secretCode" class="block text-sm font-medium text-gray-700">Secret Code</label>
+                        <input type="text" id="edit-secretCode" disabled class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 sm:text-sm">
+                    </div>
+                </div>
+            </form>
+            <div class="items-center px-4 py-3 text-right">
+                <button id="update-student-btn" class="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">Update</button>
+                <button onclick="document.getElementById('edit-student-modal').style.display='none'" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto ml-2 hover:bg-gray-300 focus:outline-none">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fee Management Modal -->
+    <div id="fee-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="fee-modal-title">Fee Management</h3>
+                <button onclick="document.getElementById('fee-modal').style.display='none'"><i class="fas fa-times text-gray-500"></i></button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Fee History -->
+                <div>
+                    <h4 class="font-semibold mb-2">Payment History</h4>
+                    <div id="fee-history-list" class="space-y-2 max-h-96 overflow-y-auto pr-2">
+                        <p class="text-slate-500">No payments found.</p>
+                    </div>
+                </div>
+                <!-- Add New Payment Form -->
+                <div>
+                    <h4 class="font-semibold mb-2">Add New Payment</h4>
+                    <form id="add-fee-form" class="space-y-3">
+                        <input type="hidden" id="fee-student-doc-id">
+                        <div>
+                            <label for="fee-month" class="block text-sm font-medium text-gray-700">For Month</label>
+                            <div class="flex gap-2 mt-1">
+                                <select id="fee-month" required class="block w-full rounded-md border-gray-300 shadow-sm">
+                                    <option value="1">January</option>
+                                    <option value="2">February</option>
+                                    <option value="3">March</option>
+                                    <option value="4">April</option>
+                                    <option value="5">May</option>
+                                    <option value="6">June</option>
+                                    <option value="7">July</option>
+                                    <option value="8">August</option>
+                                    <option value="9">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                                <input type="number" id="fee-year" required class="block w-full rounded-md border-gray-300 shadow-sm" placeholder="Year">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="fee-amount" class="block text-sm font-medium text-gray-700">Amount Paid (₹)</label>
+                            <input type="number" id="fee-amount" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div>
+                            <label for="fee-method" class="block text-sm font-medium text-gray-700">Payment Method</label>
+                            <select id="fee-method" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option>Cash</option><option>Online</option><option>Cheque</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors">Add Payment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Modal for Confirmations and Alerts -->
+    <div id="generic-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <div id="generic-modal-icon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100"></div>
+                <h3 id="generic-modal-title" class="text-lg leading-6 font-medium text-gray-900 mt-4"></h3>
+                <div class="mt-2 px-7 py-3"><p id="generic-modal-text" class="text-sm text-gray-500"></p></div>
+                <div id="generic-modal-buttons" class="items-center px-4 py-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, getCountFromServer, addDoc, doc, updateDoc, deleteDoc, query, where, serverTimestamp, onSnapshot, orderBy, limit, setDoc, collectionGroup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWkPt4hWE5hSx5XOZDo_0clnEzYnJMTnI",
+            authDomain: "studentid-3132e.firebaseapp.com",
+            projectId: "studentid-3132e",
+            storageBucket: "studentid-3132e.appspot.com",
+            messagingSenderId: "358629211169",
+            appId: "1:358629211169:web:4ee8912293caabb312f760"
+        };
+
+        // --- Initialize Firebase ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const studentsRef = collection(db, "students");
+
+        // --- Global State ---
+        let allStudents = [];
+        let studentsByClassChart = null;
+        let unsubscribeStudents = null;
+        let unsubscribeFees = null;
+        const monthNames = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        // --- UI Elements ---
+        const loginView = document.getElementById('login-view');
+        const adminPanel = document.getElementById('admin-panel');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const views = document.querySelectorAll('.view');
+        
+        // --- Modal System ---
+        const showModal = (title, text, iconHtml, buttons) => {
+            document.getElementById('generic-modal-title').textContent = title;
+            document.getElementById('generic-modal-text').innerHTML = text;
+            document.getElementById('generic-modal-icon').innerHTML = iconHtml;
+            const buttonsContainer = document.getElementById('generic-modal-buttons');
+            buttonsContainer.innerHTML = '';
+            buttons.forEach(btn => {
+                const buttonEl = document.createElement('button');
+                buttonEl.textContent = btn.text;
+                buttonEl.className = btn.classes;
+                buttonEl.onclick = () => {
+                    closeModal();
+                    if(btn.onClick) btn.onClick();
+                };
+                buttonsContainer.appendChild(buttonEl);
+            });
+            document.getElementById('generic-modal').style.display = 'block';
+        };
+        const closeModal = () => { document.getElementById('generic-modal').style.display = 'none'; };
+        const showErrorModal = (message) => showModal('Error', message, '<i class="fas fa-times fa-2x text-red-600"></i>', [{ text: 'Close', classes: 'px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto hover:bg-gray-300 focus:outline-none' }]);
+        const showConfirmationModal = (title, text, onConfirm) => showModal(title, text, '<div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100"><i class="fas fa-exclamation-triangle fa-2x text-yellow-500"></i></div>', [{ text: 'Confirm', classes: 'px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500', onClick: onConfirm }, { text: 'Cancel', classes: 'px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto ml-2 hover:bg-gray-300 focus:outline-none' }]);
+
+        // --- Authentication ---
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                loginView.style.display = 'none';
+                adminPanel.style.display = 'flex';
+                navigateTo('dashboard-view');
+            } else {
+                loginView.style.display = 'flex';
+                adminPanel.style.display = 'none';
+                if (unsubscribeStudents) unsubscribeStudents();
+                if (unsubscribeFees) unsubscribeFees();
+            }
+        });
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = e.target.email.value, password = e.target.password.value;
+            const errorDiv = document.getElementById('login-error');
+            errorDiv.textContent = '';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                console.error("Login failed:", error.code);
+                errorDiv.textContent = 'Invalid credentials. Please check email and password.';
+            }
+        });
+        document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+
+        // --- Navigation ---
+        const navigateTo = (viewId) => {
+            views.forEach(v => v.style.display = 'none');
+            document.getElementById(viewId).style.display = 'block';
+            navLinks.forEach(link => link.classList.toggle('active', link.dataset.view === viewId));
+            
+            // Fetch data for the active view
+            switch (viewId) {
+                case 'dashboard-view':
+                    fetchDashboardData();
+                    break;
+                case 'manage-students-view':
+                case 'attendance-view':
+                    listenForStudents();
+                    break;
+                case 'add-student-view':
+                    document.getElementById('add-student-form').reset();
+                    document.getElementById('add-student-feedback').textContent = '';
+                    break;
+            }
+        };
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                navigateTo(e.currentTarget.dataset.view);
+            });
+        });
+
+        // --- Dashboard Logic ---
+        const fetchDashboardData = async () => {
+            listenForStudents(); // Dashboard needs student data for charts and recent registrations
+            
+            // Fetch recent registrations
+            const q = query(studentsRef, orderBy("createdAt", "desc"), limit(5));
+            const querySnapshot = await getDocs(q);
+            const listEl = document.getElementById('recent-registrations-list');
+            listEl.innerHTML = '';
+            querySnapshot.forEach(doc => {
+                const student = doc.data();
+                const date = student.createdAt?.toDate ? student.createdAt.toDate().toLocaleDateString() : 'N/A';
+                listEl.innerHTML += `<div class="flex justify-between items-center text-sm p-2 rounded hover:bg-slate-50"><span>${student.name || 'Unnamed Student'} (${student.studentId})</span><span class="text-slate-500">${date}</span></div>`;
+            });
+
+            // --- New Fee Calculation Logic to avoid collection-group index ---
+            const allStudentsSnapshot = await getDocs(studentsRef);
+            let totalFees = 0;
+            const now = new Date();
+            const currentMonth = now.getMonth(); // 0-indexed
+            const currentYear = now.getFullYear();
+
+            const feePromises = [];
+            allStudentsSnapshot.forEach(studentDoc => {
+                const feesRef = collection(db, "students", studentDoc.id, "fees");
+                // Fetch ALL fees for the student, then filter on client
+                feePromises.push(getDocs(feesRef));
+            });
+
+            try {
+                const feeQuerySnapshots = await Promise.all(feePromises);
+                feeQuerySnapshots.forEach(feeQuerySnapshot => {
+                    feeQuerySnapshot.forEach(feeDoc => {
+                        const feeData = feeDoc.data();
+                        // Filter on the client
+                        if (feeData.paymentDate && feeData.paymentDate.toDate) {
+                            const paymentDate = feeData.paymentDate.toDate();
+                            if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
+                                totalFees += feeData.amountPaid;
+                            }
+                        }
+                    });
+                });
+                document.getElementById('fees-stat').textContent = `₹${totalFees.toLocaleString('en-IN')}`;
+            } catch (error) {
+                console.error("Error calculating monthly fees:", error);
+                document.getElementById('fees-stat').textContent = 'Error';
+            }
+        };
+
+        const updateDashboardChart = () => {
+            if (allStudents.length === 0) return;
+            const classCounts = allStudents.reduce((acc, student) => {
+                acc[student.course] = (acc[student.course] || 0) + 1;
+                return acc;
+            }, {});
+
+            const labels = Object.keys(classCounts).sort((a,b) => a-b).map(c => `Class ${c}`);
+            const data = Object.keys(classCounts).sort((a,b) => a-b).map(c => classCounts[c]);
+
+            const chartCtx = document.getElementById('students-by-class-chart').getContext('2d');
+            if (studentsByClassChart) {
+                studentsByClassChart.destroy();
+            }
+            studentsByClassChart = new Chart(chartCtx, {
+                type: 'bar',
+                data: { labels, datasets: [{ label: '# of Students', data, backgroundColor: 'rgba(79, 70, 229, 0.8)' }] },
+                options: { scales: { y: { beginAtZero: true } } }
+            });
+        };
+
+        // --- Student Management (Core Logic) ---
+        const listenForStudents = () => {
+            if (unsubscribeStudents) unsubscribeStudents();
+            unsubscribeStudents = onSnapshot(query(studentsRef, orderBy("createdAt", "desc")), (snapshot) => {
+                allStudents = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+                document.getElementById('total-students-stat').textContent = allStudents.length;
+                renderStudentsTable(allStudents);
+                updateDashboardChart();
+            }, (error) => console.error("Error listening to students:", error));
+        };
+
+        const renderStudentsTable = (students) => {
+            const tableBody = document.getElementById('students-table-body');
+            tableBody.innerHTML = '';
+            if (students.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="text-center p-8">No students found.</td></tr>`;
+                return;
+            }
+            students.forEach(student => {
+                const row = `
+                    <tr class="bg-white border-b hover:bg-gray-50">
+                        <td class="px-6 py-4 font-medium text-gray-900">${student.studentId || 'N/A'}</td>
+                        <td class="px-6 py-4">${student.name || ''}</td>
+                        <td class="px-6 py-4">${student.mobile}</td>
+                        <td class="px-6 py-4 text-center">
+                            <button class="font-medium text-blue-600 hover:underline mr-3" onclick="window.app.openFeeManager('${student.docId}')" title="Manage Fees"><i class="fas fa-dollar-sign"></i></button>
+                            <button class="font-medium text-indigo-600 hover:underline mr-3" onclick="window.app.populateEditForm('${student.docId}')" title="Edit Student"><i class="fas fa-edit"></i></button>
+                            <button class="font-medium text-red-600 hover:underline" onclick="window.app.deleteStudent('${student.docId}')" title="Delete Student"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                tableBody.innerHTML += row;
+            });
+        };
+
+        document.getElementById('search-student').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = allStudents.filter(s =>
+                (s.name && s.name.toLowerCase().includes(searchTerm)) ||
+                (s.studentId && s.studentId.toLowerCase().includes(searchTerm)) ||
+                (s.mobile && s.mobile.includes(searchTerm))
+            );
+            renderStudentsTable(filtered);
+        });
+
+        // --- Add/Edit/Delete Student ---
+        document.getElementById('add-student-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const feedbackEl = document.getElementById('add-student-feedback');
+            feedbackEl.textContent = 'Processing...';
+            const student = {
+                name: e.target.name.value.trim(),
+                fatherName: e.target.fatherName.value.trim(),
+                mobile: e.target.mobile.value.trim(),
+                course: e.target.course.value,
+                secretCode: '224205',
+                createdAt: serverTimestamp()
+            };
+            try {
+                const q = query(studentsRef, where("mobile", "==", student.mobile));
+                if (!(await getDocs(q)).empty) throw new Error(`Mobile number ${student.mobile} is already registered.`);
+                
+                const classQuery = query(studentsRef, where("course", "==", student.course));
+                const countSnapshot = await getCountFromServer(classQuery);
+                const nextId = countSnapshot.data().count + 1;
+                student.studentId = `S${String(student.course).padStart(2, '0')}${String(nextId).padStart(3, '0')}`;
+
+                await addDoc(studentsRef, student);
+                feedbackEl.textContent = `Student added successfully with ID ${student.studentId}!`;
+                feedbackEl.className = 'text-center text-sm mt-4 text-green-600';
+                e.target.reset();
+            } catch (error) {
+                console.error("Error adding student:", error);
+                feedbackEl.textContent = error.message;
+                feedbackEl.className = 'text-center text-sm mt-4 text-red-600';
+            }
+        });
+
+        const populateEditForm = (docId) => {
+            const student = allStudents.find(s => s.docId === docId);
+            if (!student) return;
+            document.getElementById('edit-docId').value = student.docId;
+            document.getElementById('edit-studentId').value = student.studentId;
+            document.getElementById('edit-name').value = student.name || '';
+            document.getElementById('edit-fatherName').value = student.fatherName || '';
+            document.getElementById('edit-mobile').value = student.mobile;
+            document.getElementById('edit-course').value = student.course;
+            document.getElementById('edit-secretCode').value = student.secretCode;
+            document.getElementById('edit-student-modal').style.display = 'block';
+        };
+
+        document.getElementById('update-student-btn').addEventListener('click', async () => {
+            const docId = document.getElementById('edit-docId').value;
+            const updatedData = {
+                name: document.getElementById('edit-name').value.trim(),
+                fatherName: document.getElementById('edit-fatherName').value.trim(),
+                mobile: document.getElementById('edit-mobile').value.trim(),
+                course: document.getElementById('edit-course').value,
+            };
+            try {
+                await updateDoc(doc(db, "students", docId), updatedData);
+                document.getElementById('edit-student-modal').style.display = 'none';
+            } catch (error) {
+                showErrorModal("Failed to update student.");
+                console.error(error);
+            }
+        });
+
+        const deleteStudent = (docId) => {
+            const student = allStudents.find(s => s.docId === docId);
+            if (!student) return;
+            showConfirmationModal('Confirm Deletion', `Delete <strong>${student.name || 'this student'}</strong> (ID: ${student.studentId})?`, async () => {
+                try {
+                    await deleteDoc(doc(db, "students", docId));
+                } catch (error) {
+                    showErrorModal("Failed to delete student.");
+                    console.error(error);
+                }
+            });
+        };
+
+        // --- Fee Management ---
+        const openFeeManager = (docId) => {
+            const student = allStudents.find(s => s.docId === docId);
+            if (!student) return;
+            document.getElementById('fee-modal-title').textContent = `Fee Management for ${student.name || student.studentId}`;
+            document.getElementById('fee-student-doc-id').value = docId;
+            
+            // Set default month and year to current
+            const now = new Date();
+            document.getElementById('fee-month').value = now.getMonth() + 1;
+            document.getElementById('fee-year').value = now.getFullYear();
+
+            listenForFees(docId);
+            document.getElementById('fee-modal').style.display = 'block';
+        };
+
+        const listenForFees = (docId) => {
+            if (unsubscribeFees) unsubscribeFees();
+            const feesRef = collection(db, "students", docId, "fees");
+            const q = query(feesRef, orderBy("paymentDate", "desc"));
+            unsubscribeFees = onSnapshot(q, (snapshot) => {
+                const listEl = document.getElementById('fee-history-list');
+                listEl.innerHTML = '';
+                if (snapshot.empty) {
+                    listEl.innerHTML = '<p class="text-slate-500">No payments found.</p>';
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const fee = doc.data();
+                    const date = fee.paymentDate?.toDate ? fee.paymentDate.toDate().toLocaleDateString() : 'N/A';
+                    const feeForMonth = fee.feeMonth && fee.feeYear ? `For ${monthNames[fee.feeMonth]} ${fee.feeYear}` : '';
+                    listEl.innerHTML += `<div class="p-2 border rounded-md">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-green-600">₹${fee.amountPaid}</span>
+                            <span class="text-xs text-slate-500">${date}</span>
+                        </div>
+                        <div class="text-sm text-slate-600">${feeForMonth}</div>
+                        <div class="text-xs text-slate-500">${fee.paymentMethod}</div>
+                    </div>`;
+                });
+            });
+        };
+
+        document.getElementById('add-fee-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const docId = document.getElementById('fee-student-doc-id').value;
+            const feeData = {
+                amountPaid: Number(e.target['fee-amount'].value),
+                paymentMethod: e.target['fee-method'].value,
+                feeMonth: Number(e.target['fee-month'].value),
+                feeYear: Number(e.target['fee-year'].value),
+                paymentDate: serverTimestamp(),
+                receiptId: `R${Date.now()}`
+            };
+            try {
+                const feesRef = collection(db, "students", docId, "fees");
+                await addDoc(feesRef, feeData);
+                e.target.reset();
+                 // Reset month/year to current after submission
+                const now = new Date();
+                document.getElementById('fee-month').value = now.getMonth() + 1;
+                document.getElementById('fee-year').value = now.getFullYear();
+            } catch (error) {
+                showErrorModal("Failed to add payment.");
+                console.error(error);
+            }
+        });
+
+        // --- Attendance ---
+        const attendanceControls = document.querySelectorAll('#attendance-course, #attendance-date');
+        attendanceControls.forEach(el => el.addEventListener('change', loadAttendanceList));
+        document.getElementById('attendance-date').valueAsDate = new Date();
+
+        async function loadAttendanceList() {
+            const course = document.getElementById('attendance-course').value;
+            const date = document.getElementById('attendance-date').value;
+            if (!course || !date) return;
+
+            const listEl = document.getElementById('attendance-student-list');
+            listEl.innerHTML = '<p class="text-center p-4">Loading...</p>';
+            
+            const studentsInClass = allStudents.filter(s => s.course === course);
+            if (studentsInClass.length === 0) {
+                listEl.innerHTML = '<p class="text-center p-4">No students in this class.</p>';
+                return;
+            }
+
+            // Fetch all attendance records for this date in one go
+            const attendanceQuery = query(collection(db, 'attendance'), where("date", "==", date), where("course", "==", course));
+            const attendanceSnapshot = await getDocs(attendanceQuery);
+            const attendanceMap = new Map();
+            attendanceSnapshot.forEach(doc => {
+                const data = doc.data();
+                attendanceMap.set(data.studentId, data.status);
+            });
+            
+            let tableHTML = `<table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr>
+                    <th class="px-6 py-3">Student ID</th><th class="px-6 py-3">Name</th><th class="px-6 py-3 text-center">Status</th>
+                </tr></thead><tbody>`;
+
+            studentsInClass.forEach(student => {
+                const status = attendanceMap.get(student.docId) || 'Absent';
+                tableHTML += `<tr class="bg-white border-b">
+                    <td class="px-6 py-4">${student.studentId}</td>
+                    <td class="px-6 py-4">${student.name || ''}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button class="px-3 py-1 rounded ${status === 'Present' ? 'bg-green-500 text-white' : 'bg-gray-200'}" onclick="window.app.markAttendance('${student.docId}', '${course}', 'Present')">P</button>
+                        <button class="px-3 py-1 rounded ${status === 'Absent' ? 'bg-red-500 text-white' : 'bg-gray-200'}" onclick="window.app.markAttendance('${student.docId}', '${course}', 'Absent')">A</button>
+                    </td>
+                </tr>`;
+            });
+            tableHTML += '</tbody></table>';
+            listEl.innerHTML = tableHTML;
+        }
+
+        const markAttendance = async (studentId, course, status) => {
+            const date = document.getElementById('attendance-date').value;
+            if (!date) {
+                showErrorModal("Please select a date first.");
+                return;
+            }
+            try {
+                // Use a composite key for the document ID to ensure one record per student per day
+                const attendanceDocId = `${date}_${studentId}`;
+                const attendanceRef = doc(db, "attendance", attendanceDocId);
+                await setDoc(attendanceRef, {
+                    studentId: studentId,
+                    date: date,
+                    course: course,
+                    status: status,
+                    markedAt: serverTimestamp()
+                });
+                loadAttendanceList(); // Refresh the list
+            } catch (error) {
+                showErrorModal("Failed to mark attendance.");
+                console.error(error);
+            }
+        };
+
+        // --- CSV Export ---
+        document.getElementById('export-csv-btn').addEventListener('click', () => {
+            if (allStudents.length === 0) {
+                showErrorModal("No student data to export.");
+                return;
+            }
+            const headers = ['StudentID', 'Name', 'FatherName', 'Mobile', 'Course', 'SecretCode', 'JoinedDate'];
+            const csvRows = [headers.join(',')];
+            allStudents.forEach(s => {
+                const joinedDate = s.createdAt?.toDate ? s.createdAt.toDate().toLocaleDateString() : '';
+                const row = [s.studentId, s.name, s.fatherName, s.mobile, s.course, s.secretCode, joinedDate];
+                csvRows.push(row.map(v => `"${v || ''}"`).join(','));
+            });
+            
+            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `student_data_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // Expose functions to global scope
+        window.app = { populateEditForm, deleteStudent, openFeeManager, markAttendance };
+
+    </script>
+</body>
+</html>
