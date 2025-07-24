@@ -110,6 +110,9 @@
                 <a href="#attendance" class="nav-link flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-700" data-view="attendance-view">
                     <i class="fas fa-calendar-check w-6 mr-3"></i> Attendance
                 </a>
+                <a href="#announcements" class="nav-link flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-700" data-view="announcements-view">
+                    <i class="fas fa-bullhorn w-6 mr-3"></i> Announcements
+                </a>
             </nav>
             <div class="absolute bottom-0 w-full left-0 px-2 pb-4">
                  <button id="logout-btn" class="w-full flex items-center justify-center px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 transition-colors duration-200">
@@ -125,6 +128,7 @@
             <div id="manage-students-view" class="view"></div>
             <div id="add-student-view" class="view"></div>
             <div id="attendance-view" class="view"></div>
+            <div id="announcements-view" class="view"></div>
         </main>
     </div>
 
@@ -163,12 +167,20 @@
     
     <template id="template-add-student-view">
          <h1 class="text-3xl font-bold text-slate-800 mb-6">Add New Student</h1>
-        <div class="bg-white p-6 rounded-xl shadow-md max-w-2xl mx-auto"><form id="add-student-form" class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="name" class="block text-sm font-medium">Full Name</label><input type="text" id="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div><div><label for="fatherName" class="block text-sm font-medium">Father's Name</label><input type="text" id="fatherName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="mobile" class="block text-sm font-medium">Mobile Number <span class="text-red-500">*</span></label><input type="tel" id="mobile" required pattern="[0-9]{10}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div><div><label for="course" class="block text-sm font-medium">Class/Course</label><select id="course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option></select></div></div><div class="text-right"><button type="submit" class="inline-flex justify-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Add Student</button></div><div id="add-student-feedback" class="text-center text-sm mt-4"></div></form></div>
+        <div class="bg-white p-6 rounded-xl shadow-md max-w-2xl mx-auto"><form id="add-student-form" class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="name" class="block text-sm font-medium">Full Name</label><input type="text" id="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div><div><label for="fatherName" class="block text-sm font-medium">Father's Name</label><input type="text" id="fatherName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="mobile" class="block text-sm font-medium">Mobile Number <span class="text-red-500">*</span></label><input type="tel" id="mobile" required pattern="[0-9]{10}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div><div><label for="course" class="block text-sm font-medium">Class/Course</label><select id="course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="">Select Class (Optional)</option><option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option></select></div></div><div class="text-right"><button type="submit" class="inline-flex justify-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Add Student</button></div><div id="add-student-feedback" class="text-center text-sm mt-4"></div></form></div>
     </template>
 
     <template id="template-attendance-view">
         <h1 class="text-3xl font-bold text-slate-800 mb-6">Mark Attendance</h1>
         <div class="bg-white p-6 rounded-xl shadow-md"><div class="flex flex-col sm:flex-row gap-4 items-center mb-4"><div><label for="attendance-course" class="block text-sm font-medium">Select Class</label><select id="attendance-course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option></select></div><div><label for="attendance-date" class="block text-sm font-medium">Select Date</label><input type="date" id="attendance-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div></div><div id="attendance-student-list" class="overflow-x-auto"><p class="text-slate-500 text-center p-4">Please select a class and date.</p></div></div>
+    </template>
+
+    <template id="template-announcements-view">
+        <h1 class="text-3xl font-bold text-slate-800 mb-6">Announcements</h1>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md"><h3 class="font-semibold mb-4">Posted Announcements</h3><div id="announcements-list" class="space-y-4 max-h-[60vh] overflow-y-auto"></div></div>
+            <div class="bg-white p-6 rounded-xl shadow-md"><h3 class="font-semibold mb-4">New Announcement</h3><form id="add-announcement-form" class="space-y-3"><div><label for="announcement-title" class="text-sm font-medium">Title</label><input type="text" id="announcement-title" required class="mt-1 w-full rounded-md border-gray-300 shadow-sm"></div><div><label for="announcement-message" class="text-sm font-medium">Message</label><textarea id="announcement-message" required rows="5" class="mt-1 w-full rounded-md border-gray-300 shadow-sm"></textarea></div><div><label for="announcement-target" class="text-sm font-medium">Target Class</label><select id="announcement-target" class="mt-1 w-full rounded-md border-gray-300 shadow-sm"><option value="all">All Classes</option><option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option></select></div><button type="submit" class="w-full py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Post</button></form></div>
+        </div>
     </template>
     
     <!-- Modal Templates -->
@@ -198,6 +210,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const studentsRef = collection(db, "students");
+        const announcementsRef = collection(db, "announcements");
 
         // --- Global State ---
         let allStudents = [];
@@ -207,7 +220,7 @@
 
         // --- UI Setup & Event Listeners ---
         const setupUI = () => {
-            const views = ['dashboard', 'manage-students', 'add-student', 'attendance'];
+            const views = ['dashboard', 'manage-students', 'add-student', 'attendance', 'announcements'];
             views.forEach(view => {
                 const template = document.getElementById(`template-${view}-view`);
                 if (template) {
@@ -279,6 +292,7 @@
                 case 'manage-students-view': listenForStudents(); break;
                 case 'add-student-view': break;
                 case 'attendance-view': listenForStudents(); document.getElementById('attendance-date').valueAsDate = new Date(); break;
+                case 'announcements-view': listenForAnnouncements(); break;
             }
         };
         document.querySelectorAll('.nav-link').forEach(link => {
@@ -341,7 +355,11 @@
         const updateDashboardChart = () => {
             const chartCanvas = document.getElementById('students-by-class-chart');
             if (!allStudents.length || !chartCanvas) return; // FIX: Guard clause
-            const classCounts = allStudents.reduce((acc, s) => { acc[s.course] = (acc[s.course] || 0) + 1; return acc; }, {});
+            const classCounts = allStudents.reduce((acc, s) => { 
+                const courseKey = s.course || 'Unassigned';
+                acc[courseKey] = (acc[courseKey] || 0) + 1; 
+                return acc; 
+            }, {});
             const labels = Object.keys(classCounts).sort((a,b) => a-b).map(c => `Class ${c}`);
             const data = Object.keys(classCounts).sort((a,b) => a-b).map(c => classCounts[c]);
             const ctx = chartCanvas.getContext('2d');
@@ -353,7 +371,8 @@
         document.addEventListener('submit', (e) => {
             if (e.target.id === 'add-student-form') handleAddStudent(e);
             if (e.target.id === 'add-fee-form') handleAddFee(e);
-            if (e.target.id === 'edit-student-form') handleUpdateStudent(e); // FIX: Added handler
+            if (e.target.id === 'edit-student-form') handleUpdateStudent(e);
+            if (e.target.id === 'add-announcement-form') handleAddAnnouncement(e);
         });
         document.addEventListener('input', (e) => {
             if (e.target.id === 'search-student') renderStudentsTable(allStudents.filter(s => (s.name || '').toLowerCase().includes(e.target.value.toLowerCase())));
@@ -370,6 +389,8 @@
                 updateDashboardChart();
             }
         }));
+        
+        const listenForAnnouncements = () => addListener(onSnapshot(query(announcementsRef, orderBy("postDate", "desc")), snapshot => renderAnnouncements(snapshot.docs)));
 
         // --- Render Functions ---
         const renderStudentsTable = (students) => {
@@ -388,6 +409,16 @@
                 </tr>`).join('');
         };
 
+        const renderAnnouncements = (docs) => {
+            const listEl = document.getElementById('announcements-list');
+            if(!listEl) return;
+            listEl.innerHTML = docs.map(doc => {
+                const a = doc.data();
+                const target = a.targetClass === 'all' ? 'All Classes' : `Class ${a.targetClass}`;
+                return `<div class="p-4 border rounded-lg bg-white"><div class="flex justify-between items-start"><h4 class="font-bold">${a.title}</h4><span class="text-xs font-medium text-indigo-600 bg-indigo-100 px-2 py-1 rounded-full">${target}</span></div><p class="text-sm mt-1">${a.message}</p><div class="text-xs text-slate-500 mt-2">${a.postDate.toDate().toLocaleString()}</div></div>`;
+            }).join('');
+        };
+
         // --- Handler Functions ---
         const handleAddStudent = async (e) => {
             e.preventDefault();
@@ -395,8 +426,15 @@
             const student = { name: form.name.value.trim(), fatherName: form.fatherName.value.trim(), mobile: form.mobile.value.trim(), course: form.course.value, secretCode: '224205', createdAt: serverTimestamp() };
             try {
                 if (!(await getDocs(query(studentsRef, where("mobile", "==", student.mobile)))).empty) throw new Error(`Mobile number ${student.mobile} is already registered.`);
-                const countSnapshot = await getCountFromServer(query(studentsRef, where("course", "==", student.course)));
-                student.studentId = `S${String(student.course).padStart(2, '0')}${String(countSnapshot.data().count + 1).padStart(3, '0')}`;
+                
+                if (student.course) {
+                    const countSnapshot = await getCountFromServer(query(studentsRef, where("course", "==", student.course)));
+                    student.studentId = `S${String(student.course).padStart(2, '0')}${String(countSnapshot.data().count + 1).padStart(3, '0')}`;
+                } else {
+                    const totalStudentsSnapshot = await getCountFromServer(studentsRef);
+                    student.studentId = `G${String(totalStudentsSnapshot.data().count + 1).padStart(4, '0')}`;
+                }
+
                 await addDoc(studentsRef, student);
                 form.reset();
                 document.getElementById('add-student-feedback').textContent = `Student added successfully with ID ${student.studentId}!`;
@@ -433,6 +471,18 @@
                 console.error(error);
             }
         };
+
+        const handleAddAnnouncement = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            await addDoc(announcementsRef, { 
+                title: form['announcement-title'].value, 
+                message: form['announcement-message'].value, 
+                targetClass: form['announcement-target'].value,
+                postDate: serverTimestamp() 
+            });
+            form.reset();
+        };
         
         // --- Public App Functions ---
         window.app = {
@@ -456,6 +506,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div><label for="edit-course" class="block text-sm font-medium">Class/Course</label>
                                 <select id="edit-course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                    <option value="">Select Class (Optional)</option>
                                     <option value="6" ${s.course == '6' ? 'selected' : ''}>6th</option>
                                     <option value="7" ${s.course == '7' ? 'selected' : ''}>7th</option>
                                     <option value="8" ${s.course == '8' ? 'selected' : ''}>8th</option>
@@ -519,7 +570,7 @@
             const attendanceQuery = query(collection(db, 'attendance'), where("date", "==", date), where("course", "==", course));
             const attendanceSnapshot = await getDocs(attendanceQuery);
             const attendanceMap = new Map(attendanceSnapshot.docs.map(d => [d.data().studentId, d.data().status]));
-            listEl.innerHTML = `<table class="w-full text-sm">...<thead>...</thead><tbody>${studentsInClass.map(s => {
+            listEl.innerHTML = `<table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-6 py-3">Student ID</th><th class="px-6 py-3">Name</th><th class="px-6 py-3 text-center">Status</th></tr></thead><tbody>${studentsInClass.map(s => {
                 const status = attendanceMap.get(s.docId) || 'Absent';
                 return `<tr class="border-b"><td class="p-2">${s.studentId}</td><td class="p-2">${s.name}</td><td class="p-2 text-center"><button class="px-2 py-1 text-xs rounded ${status === 'Present' ? 'bg-green-500 text-white' : 'bg-gray-200'}" onclick="window.app.markAttendance('${s.docId}','${course}','Present')">P</button> <button class="px-2 py-1 text-xs rounded ${status === 'Absent' ? 'bg-red-500 text-white' : 'bg-gray-200'}" onclick="window.app.markAttendance('${s.docId}','${course}','Absent')">A</button></td></tr>`;
             }).join('')}</tbody></table>`;
