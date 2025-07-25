@@ -135,6 +135,7 @@
     <!-- All Modals -->
     <div id="edit-student-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50"></div>
     <div id="fee-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50"></div>
+    <div id="announcement-edit-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50"></div>
     <div id="generic-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50"></div>
 
     <!-- Templates for Views and Modals -->
@@ -172,7 +173,19 @@
 
     <template id="template-attendance-view">
         <h1 class="text-3xl font-bold text-slate-800 mb-6">Mark Attendance</h1>
-        <div class="bg-white p-6 rounded-xl shadow-md"><div class="flex flex-col sm:flex-row gap-4 items-center mb-4"><div><label for="attendance-course" class="block text-sm font-medium">Select Class</label><select id="attendance-course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option></select></div><div><label for="attendance-date" class="block text-sm font-medium">Select Date</label><input type="date" id="attendance-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div></div><div id="attendance-student-list" class="overflow-x-auto"><p class="text-slate-500 text-center p-4">Please select a class and date.</p></div></div>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <div class="flex flex-col sm:flex-row gap-4 items-center mb-4">
+                <div><label for="attendance-course" class="block text-sm font-medium">Select Class</label><select id="attendance-course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="6">6th</option><option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option></select></div>
+                <div><label for="attendance-date" class="block text-sm font-medium">Select Date</label><input type="date" id="attendance-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                <button id="mark-all-present" class="w-full sm:w-auto flex-1 px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600">Mark All Present</button>
+                <button id="mark-all-absent" class="w-full sm:w-auto flex-1 px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600">Mark All Absent</button>
+            </div>
+            <div id="attendance-student-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <p class="text-slate-500 text-center p-4 sm:col-span-2 md:col-span-3 lg:col-span-4">Please select a class and date.</p>
+            </div>
+        </div>
     </template>
 
     <template id="template-announcements-view">
@@ -187,13 +200,14 @@
     <template id="template-edit-student-modal"></template>
     <template id="template-fee-modal"></template>
     <template id="template-generic-modal"></template>
+    <template id="template-announcement-edit-modal"></template>
 
     <!-- Firebase SDK -->
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, getCountFromServer, addDoc, doc, updateDoc, deleteDoc, query, where, serverTimestamp, onSnapshot, orderBy, limit, setDoc, collectionGroup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, getCountFromServer, addDoc, doc, updateDoc, deleteDoc, query, where, serverTimestamp, onSnapshot, orderBy, limit, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Firebase Configuration ---
         const firebaseConfig = {
@@ -354,7 +368,7 @@
 
         const updateDashboardChart = () => {
             const chartCanvas = document.getElementById('students-by-class-chart');
-            if (!allStudents.length || !chartCanvas) return; // FIX: Guard clause
+            if (!allStudents.length || !chartCanvas) return;
             const classCounts = allStudents.reduce((acc, s) => { 
                 const courseKey = s.course || 'Unassigned';
                 acc[courseKey] = (acc[courseKey] || 0) + 1; 
@@ -373,10 +387,15 @@
             if (e.target.id === 'add-fee-form') handleAddFee(e);
             if (e.target.id === 'edit-student-form') handleUpdateStudent(e);
             if (e.target.id === 'add-announcement-form') handleAddAnnouncement(e);
+            if (e.target.id === 'edit-announcement-form') handleUpdateAnnouncement(e);
         });
         document.addEventListener('input', (e) => {
             if (e.target.id === 'search-student') renderStudentsTable(allStudents.filter(s => (s.name || '').toLowerCase().includes(e.target.value.toLowerCase())));
             if (e.target.matches('#attendance-course, #attendance-date')) loadAttendanceList();
+        });
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'mark-all-present') handleMarkAll('Present');
+            if (e.target.id === 'mark-all-absent') handleMarkAll('Absent');
         });
 
         const addListener = (unsub) => unsubscribeListeners.push(unsub);
@@ -415,7 +434,7 @@
             listEl.innerHTML = docs.map(doc => {
                 const a = doc.data();
                 const target = a.targetClass === 'all' ? 'All Classes' : `Class ${a.targetClass}`;
-                return `<div class="p-4 border rounded-lg bg-white"><div class="flex justify-between items-start"><h4 class="font-bold">${a.title}</h4><span class="text-xs font-medium text-indigo-600 bg-indigo-100 px-2 py-1 rounded-full">${target}</span></div><p class="text-sm mt-1">${a.message}</p><div class="text-xs text-slate-500 mt-2">${a.postDate.toDate().toLocaleString()}</div></div>`;
+                return `<div class="p-4 border rounded-lg bg-white relative"><div class="flex justify-between items-start"><h4 class="font-bold">${a.title}</h4><span class="text-xs font-medium text-indigo-600 bg-indigo-100 px-2 py-1 rounded-full">${target}</span></div><p class="text-sm mt-1">${a.message}</p><div class="text-xs text-slate-500 mt-2">${a.postDate.toDate().toLocaleString()}</div><div class="absolute top-2 right-2 space-x-2"><button onclick="window.app.openAnnouncementEditor('${doc.id}')" class="text-slate-500 hover:text-indigo-600"><i class="fas fa-edit"></i></button><button onclick="window.app.deleteAnnouncement('${doc.id}')" class="text-slate-500 hover:text-red-600"><i class="fas fa-trash"></i></button></div></div>`;
             }).join('');
         };
 
@@ -483,6 +502,24 @@
             });
             form.reset();
         };
+
+        const handleUpdateAnnouncement = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const docId = form['edit-announcement-id'].value;
+            const updatedData = {
+                title: form['edit-announcement-title'].value,
+                message: form['edit-announcement-message'].value,
+                targetClass: form['edit-announcement-target'].value,
+            };
+            try {
+                await updateDoc(doc(db, "announcements", docId), updatedData);
+                closeModal('announcement-edit-modal');
+            } catch (error) {
+                showErrorModal("Failed to update announcement.");
+                console.error(error);
+            }
+        };
         
         // --- Public App Functions ---
         window.app = {
@@ -545,7 +582,18 @@
                 const attendanceDocId = `${date}_${studentId}`;
                 await setDoc(doc(db, "attendance", attendanceDocId), { studentId, date, course, status, markedAt: serverTimestamp() });
                 loadAttendanceList();
-            }
+            },
+            openAnnouncementEditor: async (docId) => {
+                const docSnap = await getDoc(doc(db, "announcements", docId));
+                if (!docSnap.exists()) return showErrorModal("Announcement not found.");
+                const a = docSnap.data();
+                const content = `<div class="relative top-10 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white"><h3 class="text-lg font-medium text-center mb-4">Edit Announcement</h3><form id="edit-announcement-form" class="space-y-3"><input type="hidden" id="edit-announcement-id" value="${docId}"><div><label for="edit-announcement-title" class="text-sm font-medium">Title</label><input type="text" id="edit-announcement-title" required class="mt-1 w-full rounded-md border-gray-300 shadow-sm" value="${a.title}"></div><div><label for="edit-announcement-message" class="text-sm font-medium">Message</label><textarea id="edit-announcement-message" required rows="5" class="mt-1 w-full rounded-md border-gray-300 shadow-sm">${a.message}</textarea></div><div><label for="edit-announcement-target" class="text-sm font-medium">Target Class</label><select id="edit-announcement-target" class="mt-1 w-full rounded-md border-gray-300 shadow-sm"><option value="all" ${a.targetClass === 'all' ? 'selected' : ''}>All Classes</option><option value="6" ${a.targetClass === '6' ? 'selected' : ''}>6th</option><option value="7" ${a.targetClass === '7' ? 'selected' : ''}>7th</option><option value="8" ${a.targetClass === '8' ? 'selected' : ''}>8th</option><option value="9" ${a.targetClass === '9' ? 'selected' : ''}>9th</option><option value="10" ${a.targetClass === '10' ? 'selected' : ''}>10th</option><option value="11" ${a.targetClass === '11' ? 'selected' : ''}>11th</option><option value="12" ${a.targetClass === '12' ? 'selected' : ''}>12th</option></select></div><div class="text-right space-x-2"><button type="button" onclick="window.app.closeModal('announcement-edit-modal')" class="px-4 py-2 bg-gray-200 rounded-md">Cancel</button><button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Save Changes</button></div></form></div>`;
+                showModal('announcement-edit-modal', content);
+            },
+            deleteAnnouncement: (docId) => {
+                showConfirmationModal('Confirm Deletion', `Are you sure you want to delete this announcement?`, `window.app.confirmDeleteAnnouncement('${docId}')`);
+            },
+            confirmDeleteAnnouncement: async (docId) => { await deleteDoc(doc(db, "announcements", docId)); },
         };
 
         const listenForFees = (docId) => {
@@ -570,10 +618,23 @@
             const attendanceQuery = query(collection(db, 'attendance'), where("date", "==", date), where("course", "==", course));
             const attendanceSnapshot = await getDocs(attendanceQuery);
             const attendanceMap = new Map(attendanceSnapshot.docs.map(d => [d.data().studentId, d.data().status]));
-            listEl.innerHTML = `<table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-6 py-3">Student ID</th><th class="px-6 py-3">Name</th><th class="px-6 py-3 text-center">Status</th></tr></thead><tbody>${studentsInClass.map(s => {
-                const status = attendanceMap.get(s.docId) || 'Absent';
-                return `<tr class="border-b"><td class="p-2">${s.studentId}</td><td class="p-2">${s.name}</td><td class="p-2 text-center"><button class="px-2 py-1 text-xs rounded ${status === 'Present' ? 'bg-green-500 text-white' : 'bg-gray-200'}" onclick="window.app.markAttendance('${s.docId}','${course}','Present')">P</button> <button class="px-2 py-1 text-xs rounded ${status === 'Absent' ? 'bg-red-500 text-white' : 'bg-gray-200'}" onclick="window.app.markAttendance('${s.docId}','${course}','Absent')">A</button></td></tr>`;
-            }).join('')}</tbody></table>`;
+            listEl.innerHTML = studentsInClass.map(s => {
+                const status = attendanceMap.get(s.docId) || 'Present';
+                const bgColor = status === 'Present' ? 'bg-green-200' : 'bg-gray-200';
+                const textColor = status === 'Present' ? 'text-green-800' : 'text-gray-800';
+                return `<div class="p-3 rounded-lg shadow cursor-pointer ${bgColor}" onclick="window.app.markAttendance('${s.docId}','${course}','${status === 'Present' ? 'Absent' : 'Present'}')">
+                    <p class="font-semibold ${textColor}">${s.name || 'Unnamed'}</p>
+                    <p class="text-sm ${textColor}">${s.studentId}</p>
+                </div>`;
+            }).join('');
+        };
+
+        const handleMarkAll = (status) => {
+            const course = document.getElementById('attendance-course').value;
+            const studentsInClass = allStudents.filter(s => s.course === course);
+            studentsInClass.forEach(student => {
+                window.app.markAttendance(student.docId, course, status);
+            });
         };
         
         document.getElementById('export-csv-btn')?.addEventListener('click', () => {
